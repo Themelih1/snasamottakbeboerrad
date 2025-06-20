@@ -1,0 +1,270 @@
+    /* Siyah, Beyaz ve Altın Renk Paleti */
+    :root {
+        --primary-black: #000000;
+        --primary-white: #ffffff;
+        --accent-gold: #c5a267;
+        --light-gray: #f5f5f5;
+        --dark-gray: #222222;
+    }
+
+    /* Hero Section - Siyah Arkaplan */
+    .member-hero {
+        background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9));
+        background-size: cover;
+        background-position: center;
+        color: var(--primary-white);
+        padding: 12rem 0 8rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .member-hero h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--primary-white);
+        letter-spacing: 1px;
+        position: relative;
+        display: inline-block;
+    }
+
+    .member-hero h1::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -10px;
+        width: 80px;
+        height: 3px;
+        background: var(--accent-gold);
+        transform: translateX(-50%);
+    }
+
+    .member-hero p {
+        font-size: 1.25rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        color: rgba(255,255,255,0.8);
+    }
+
+    .expertise-badge {
+        background-color: rgba(197, 162, 103, 0.1);
+        color: var(--accent-gold);
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 500;
+        border: 1px solid var(--accent-gold);
+        display: inline-block;
+    }
+
+    /* Üye Detayları */
+    .member-details {
+        padding: 6rem 0;
+        background: var(--light-gray);
+    }
+
+    .member-card {
+        border: none;
+        border-radius: 0;
+        overflow: hidden;
+        background: var(--primary-white);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+
+    .member-img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        object-position: top;
+    }
+
+    .member-card-body {
+        padding: 2rem;
+    }
+
+    .member-name {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--primary-black);
+        font-size: 1.75rem;
+    }
+
+    .member-position {
+        color: var(--accent-gold);
+        font-size: 1rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+    }
+
+    .member-contact {
+        margin: 2rem 0;
+    }
+
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        opacity: 0.2;
+        margin: 2rem 0;
+    }
+
+    .expertise-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* İçerik Alanı */
+    .member-content {
+        padding-left: 3rem;
+    }
+
+    .member-content h2 {
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--primary-black);
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .member-content h2::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--accent-gold);
+    }
+
+    /* İlgili Üyeler */
+    .related-members {
+        background: var(--primary-black);
+        color: var(--primary-white);
+        padding: 6rem 0;
+    }
+
+    .related-title {
+        color: var(--primary-white);
+        margin-bottom: 1.5rem;
+    }
+
+    .related-title::after {
+        background: var(--accent-gold);
+    }
+
+    .related-card {
+        background: var(--dark-gray);
+        border: none;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .related-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .related-img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+    }
+
+    .related-name {
+        color: var(--primary-white);
+    }
+
+    .related-position {
+        color: var(--accent-gold);
+    }
+
+    /* Butonlar */
+    .btn-gold {
+        background: var(--accent-gold);
+        color: var(--primary-black);
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 0.8rem 2rem;
+        border: none;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .btn-gold:hover {
+        background: var(--primary-white);
+        color: var(--primary-black);
+        transform: translateY(-3px);
+    }
+
+    .btn-outline-gold {
+        background: transparent;
+        color: var(--accent-gold);
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 0.8rem 2rem;
+        border: 2px solid var(--accent-gold);
+        border-radius: 0;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline-gold:hover {
+        background: var(--accent-gold);
+        color: var(--primary-black);
+    }
+
+    /* Responsive Tasarım */
+    @media (max-width: 1200px) {
+        .member-hero {
+            padding: 10rem 0 6rem;
+        }
+        
+        .member-hero h1 {
+            font-size: 3.5rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .member-content {
+            padding-left: 0;
+            padding-top: 3rem;
+        }
+
+        .member-img {
+            height: 350px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .member-hero {
+            padding: 8rem 0 4rem;
+        }
+        
+        .member-hero h1 {
+            font-size: 2.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .member-hero {
+            padding: 6rem 0 3rem;
+        }
+        
+        .member-hero h1 {
+            font-size: 2rem;
+        }
+
+        .member-contact .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .member-contact .btn {
+            width: 100%;
+        }
+    }

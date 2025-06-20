@@ -1,0 +1,219 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load compress %}
+
+
+
+{% block title %}Hizmetlerimiz - {{ site_owner.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% compress css %}
+
+<link rel="stylesheet" href="{% static 'css/service.css' %}">
+{% endcompress %}
+
+{% endblock %}
+
+
+{% block content %}
+<!-- Hero Section -->
+<section class="service-hero">
+    <div class="container">
+        <h1 data-aos="fade-up">Hukuki Hizmetlerimiz</h1>
+        <p data-aos="fade-up" data-aos-delay="100">Tuglaci Hukuk Ve Danismanlik  olarak, müvekkillerimize en kaliteli hukuki danışmanlık hizmetlerini sunuyoruz</p>
+        <a href="#services" class="hero-scroll-down" data-aos="fade-up" data-aos-delay="300">
+            <i class="fas fa-chevron-down"></i>
+        </a>
+    </div>
+</section>
+
+<!-- Hizmet Listesi -->
+<section id="services" class="services-section">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold mb-3">Uzmanlık Alanlarımız</h2>
+            <p class="text-muted lead">Profesyonel ekibimizle sunduğumuz özel hizmetler</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for service in services %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                <div class="service-card">
+                    <div class="card-body">
+                        <div class="icon-box">
+                            <i class="{{ service.icon }}"></i>
+                        </div>
+                        <h3>{{ service.title }}</h3>
+                        <div class="tinymce-content">
+                            {{ service.description|safe|truncatewords_html:30 }}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+                        <a href="{% url 'core:service_detail' service.slug %}" class="btn btn-outline-gold">Detaylı Bilgi</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- İstatistikler -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-6" data-aos="fade-up">
+                <div class="stat-item">
+                    <div class="stat-number">+<span class="counter" data-count="250">0</span></div>
+                    <div class="stat-title">Tamamlanan Dava</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-item">
+                    <div class="stat-number">+<span class="counter" data-count="15">0</span></div>
+                    <div class="stat-title">Yıllık Deneyim</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-item">
+                    <div class="stat-number">%<span class="counter" data-count="98">0</span></div>
+                    <div class="stat-title">Müvekkil Memnuniyeti</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-item">
+                    <div class="stat-number">+<span class="counter" data-count="500">0</span></div>
+                    <div class="stat-title">Mutlu Müvekkil</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hizmet Süreci -->
+<section class="process-section">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold mb-3 text-light" >Hizmet Sürecimiz</h2>
+            <p class="text-light lead">Profesyonel ve şeffaf çalışma metodumuz</p>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="process-item" data-aos="fade-right">
+                    <div class="process-number">1</div>
+                    <div class="process-content">
+                        <h4>İlk Görüşme</h4>
+                        <p>Hukuki sorununuzu birlikte değerlendiriyor ve size en uygun çözüm yolunu belirliyoruz.</p>
+                    </div>
+                </div>
+                
+                <div class="process-item" data-aos="fade-left" data-aos-delay="100">
+                    <div class="process-number">2</div>
+                    <div class="process-content">
+                        <h4>Strateji Geliştirme</h4>
+                        <p>Uzman ekibimizle durumunuzu analiz edip en etkili hukuki stratejiyi oluşturuyoruz.</p>
+                    </div>
+                </div>
+                
+                <div class="process-item" data-aos="fade-right" data-aos-delay="200">
+                    <div class="process-number">3</div>
+                    <div class="process-content">
+                        <h4>Hukuki Süreç Yönetimi</h4>
+                        <p>Tüm hukuki süreçleri sizin adınıza profesyonel şekilde yönetiyoruz.</p>
+                    </div>
+                </div>
+                
+                <div class="process-item" data-aos="fade-left" data-aos-delay="300">
+                    <div class="process-number">4</div>
+                    <div class="process-content">
+                        <h4>Sonuç Odaklı Çözüm</h4>
+                        <p>Sürecin her aşamasında sizi bilgilendirerek en iyi sonuca ulaşıyoruz.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- İletişim CTA -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content" data-aos="zoom-in">
+            <h2 class="cta-title">Hukuki Sorununuz İçin <span>Çözüm Sunmaya Hazırız</span></h2>
+            <p class="cta-subtitle">Profesyonel ekibimiz size özel çözümler üretmek için bekliyor</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="tel:{{ site_owner.phone }}" class="btn btn-gold px-4">
+                    <i class="fas fa-phone me-2"></i> Bize ULaşın
+                </a>
+                <a href="mailto:tuglacihukuk@gmail.com" class="btn btn-outline-gold px-4">
+                    <i class="fas fa-envelope me-2"></i> Mail Gönder
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animasyonları başlat
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+        
+        // Yumuşak scroll efekti
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Sayı sayma animasyonu
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+        
+        counters.forEach(counter => {
+            const animate = () => {
+                const target = +counter.getAttribute('data-count');
+                const count = +counter.innerText;
+                const increment = target / speed;
+                
+                if(count < target) {
+                    counter.innerText = Math.ceil(count + increment);
+                    setTimeout(animate, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                if(entries[0].isIntersecting) {
+                    animate();
+                }
+            });
+            
+            observer.observe(counter);
+        });
+    });
+</script>
+{% endblock %}

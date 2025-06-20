@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    entrypoint: /app/entrypoint.sh
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - PORT=8001
+    restart: always

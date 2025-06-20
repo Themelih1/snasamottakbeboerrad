@@ -1,0 +1,105 @@
+{% load static %}
+{% load compress %}
+<!-- Navbar CSS -->
+ {% block extra_css %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% compress css %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+{% endcompress %}
+{% endblock %}
+
+<!-- Navbar CSS End -->
+
+<!-- Navbar HTML -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'core:home' %}">
+            <img src="{% static 'images/logo-dark.png' %}" alt="Logo" class="dark-logo">
+            <img src="{% static 'images/logo-light.png' %}" alt="Logo" class="light-logo">
+            <span class="brand-text"></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}#about">Hakkımda</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'core:services' %}">Hizmetler</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'core:team' %}">Ekibimiz</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'core:blog' %}">Blog</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'core:contact' %}">İletişim</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<!-- Mobile Bottom Navbar HTML -->
+<div class="mobile-bottom-navbar d-lg-none">
+    <a href="{% url 'core:home' %}" class="mobile-nav-item">
+        <i class="fas fa-home mobile-nav-icon"></i>
+        <span class="mobile-nav-text">Ana Sayfa</span>
+    </a>
+    <a href="{% url 'core:services' %}" class="mobile-nav-item">
+        <i class="fas fa-balance-scale mobile-nav-icon"></i>
+        <span class="mobile-nav-text">Hizmetler</span>
+    </a>
+    <a href="{% url 'core:team' %}" class="mobile-nav-item">
+        <i class="fa-sharp fa-solid fa-people-group"></i>
+        <span class="mobile-nav-text">Ekibimiz</span>
+    </a>
+    <a href="{% url 'core:blog' %}" class="mobile-nav-item">
+        <i class="fas fa-pen-nib mobile-nav-icon"></i>
+        <span class="mobile-nav-text">Blog</span>
+    </a>
+    <a href="https://wa.me/905065108774" class="mobile-nav-item">
+        <i class="fab fa-whatsapp mobile-nav-icon"></i>
+        <span class="mobile-nav-text">WhatsApp</span>
+    </a>
+</div>
+
+<!-- Navbar JS -->
+<script>
+    // Navbar Scroll Effect
+    window.addEventListener('scroll', function () {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    // Sayfa yüklendiğinde kontrol et
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.scrollY > 50) {
+            document.querySelector('.navbar').classList.add('scrolled');
+        }
+    });
+</script>
+<script>
+    // Aktif sayfayı belirleme
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentUrl = window.location.pathname;
+        const navItems = document.querySelectorAll('.mobile-nav-item');
+
+        navItems.forEach(item => {
+            if (item.getAttribute('href') === currentUrl) {
+                item.classList.add('active');
+            }
+        });
+
+        // WhatsApp numarasını dinamik olarak güncelleme (isteğe bağlı)
+        const whatsappLink = document.querySelector('a[href^="https://wa.me/"]');
+        if (whatsappLink) {
+            // Burada gerçek telefon numaranızı kullanın
+            whatsappLink.setAttribute('href', 'https://wa.me/905065108774');
+        }
+
+        // Telefon numarasını dinamik olarak güncelleme (isteğe bağlı)
+        const phoneLink = document.querySelector('a[href^="tel:"]');
+        if (phoneLink) {
+            // Burada gerçek telefon numaranızı kullanın
+            phoneLink.setAttribute('href', 'tel:+905065108774');
+        }
+    });
+</script>

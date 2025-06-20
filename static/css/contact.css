@@ -1,0 +1,48 @@
+ :root {
+        --primary-dark: #000000;
+        --primary-light: #FFFFFF;
+        --gold-accent: #c5a267;
+        --gold-light: #F5E6C8;
+        --gray-dark: #2A2A2A;
+        --gray-light: #F8F8F8;
+    }
+    
+    /* Critical CSS */
+    .contact-hero {
+          background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9));
+        background-size: cover;
+        background-position: center;
+        color: var(--primary-white);
+        padding: 12rem 0 8rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    
+    .contact-info-card {
+        background: var(--primary-light);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        border-left: 4px solid var(--gold-accent);
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .section-divider {
+        height: 2px;
+        width: 60px;
+        background: var(--gold-accent);
+        margin: 25px 0;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+        color: var(--primary-light);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: transparent;
+        color: var(--primary-dark);
+        border-color: var(--primary-dark);
+    }

@@ -1,0 +1,382 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load compress %}
+
+
+{% block extra_css %}
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css"></noscript>
+<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css"></noscript>
+<link rel="preload" href="{% static 'css/index.css' %}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+{% compress css %}
+<noscript><link rel="stylesheet" href="{% static 'css/index.css' %}"></noscript>
+{% endcompress %}
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6" data-aos="fade-right">
+                <h1 class="hero-title fw-bold mb-4">{{ site_owner.position }} <br><span
+                        class="text-white">{{site_owner.name }}</span></h1>
+                <p class="lead mb-4">{{ site_owner.short_bio }}</p>
+            </div>
+            <div class="col-lg-6 mt-5 mt-lg-0" data-aos="fade-left">
+                <img src="{{ site_owner.image.url }}" alt="{{ site_owner.name }}" 
+                     class="img-fluid rounded shadow-lg lazyload"
+                     style="max-height: 600px;"
+                     loading="lazy"
+                     width="600" height="600">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="section bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-5 mb-lg-0">
+                <div class="position-relative about-img">
+                    <img src="{{ site_owner.about_image.url }}" alt="{{ site_owner.name }}" 
+                         class="img-fluid rounded-3 lazyload"
+                         loading="lazy"
+                         width="500" height="500">
+                </div>
+            </div>
+            <div class="col-lg-7" data-aos="fade-up" data-aos-delay="200">
+                <h2 class="section-title fw-bold text-center">Hakkımda</h2>
+                <div class="tinymce-content fs-5">
+                    {{ site_owner.bio|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hizmetler Bölümü -->
+<section class="section bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title fw-bold">Hizmetlerimiz</h2>
+            <p class="lead text-muted">Uzmanlık alanlarımız</p>
+        </div>
+
+        <div class="swiper service-swiper">
+            <div class="swiper-wrapper">
+                {% for service in services|slice:":3" %}
+                <div class="swiper-slide">
+                    <div class="card h-100 border-0 shadow-sm service-card">
+                        <div class="card-body text-center">
+                            <div class="icon-box mb-4">
+                                <i class="{{ service.icon }} fa-2x"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">{{ service.title }}</h4>
+                            <div class="tinymce-content">
+                                {{ service.description|safe|truncatewords_html:30 }}
+                            </div>
+                            <a href="{% url 'core:service_detail' service.slug %}" class="btn btn-link mt-3">
+                                Detaylı Bilgi <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+        </div>
+
+        <div class="text-center mt-5" data-aos="fade-up">
+            <a href="{% url 'core:services' %}" class="btn btn-outline-dark px-4">Tüm Hizmetler</a>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Bölümü -->
+<section class="section bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title fw-bold">Hukuk Blogu</h2>
+            <p class="lead text-muted">Güncel hukuki gelişmeler ve makaleler</p>
+        </div>
+
+        <div class="row g-4">
+            {% for post in recent_posts %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                <div class="card h-100 border-0 shadow-sm blog-card">
+                    <img src="{{ post.thumbnail.url }}" class="card-img-top lazyload" 
+                         alt="{{ post.title }}" loading="lazy"
+                         style="height: 200px; object-fit: cover;"
+                         width="400" height="200">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge bg-dark me-2">{{ post.category }}</span>
+                            <small class="text-muted">{{ post.publish_date|date:"d F Y" }}</small>
+                        </div>
+                        <h5 class="fw-bold">{{ post.title }}</h5>
+                        <div class="tinymce-content">
+                            {{ post.summary|safe }}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="{% url 'core:blog_detail' post.slug %}" class="btn btn-link p-0">
+                            Devamını Oku <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-5" data-aos="fade-up">
+            <a href="{% url 'core:blog' %}" class="btn btn-outline-dark px-4">Tüm Yazılar</a>
+        </div>
+    </div>
+</section>
+
+<!-- Özlü Söz Bölümü -->
+<section class="quote-section">
+    <div class="container">
+        <div class="quote-content">{{ site_owner.quote|safe }}</div>
+        {% if site_owner.quote_author %}
+        <div class="mt-0 fw-bold text-light">- {{ site_owner.quote_author }}</div>
+        {% endif %}
+    </div>
+</section>  
+
+<!-- İletişim Bölümü -->
+<section id="contact" class="section bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title fw-bold">İletişim</h2>
+            <p class="lead text-muted">Bizimle iletişime geçin</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5" data-aos="fade-right">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="fw-bold mb-4">İletişim Bilgileri</h4>
+
+                        <div class="d-flex mb-4">
+                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-2">Adres</h5>
+                                <p class="mb-0">{{ contact_info.address|linebreaksbr }}</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex mb-4">
+                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-2">Telefon</h5>
+                                <p class="mb-0"><a href="tel:{{ contact_info.phone }}"
+                                        class="text-decoration-none text-dark">{{ contact_info.phone }}</a></p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex mb-4">
+                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-2">E-posta</h5>
+                                <p class="mb-0"><a href="mailto:{{ contact_info.email }}"
+                                        class="text-decoration-none text-dark">{{ contact_info.email }}</a></p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex">
+                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-2">Çalışma Saatleri</h5>
+                                <p class="mb-0">{{ contact_info.working_hours|linebreaksbr }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7" data-aos="fade-left">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="fw-bold mb-4">Danışmanlık Talebi</h4>
+                        <form method="post" action="{% url 'core:contact' %}" class="contact-form">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label">Adınız Soyadınız</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">E-posta Adresiniz</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="subject" class="form-label">Konu</label>
+                                    <input type="text" class="form-control" id="subject" name="subject" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="message" class="form-label">Mesajınız</label>
+                                    <textarea class="form-control" id="message" name="message" rows="4"
+                                        required></textarea>
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-dark w-100 py-3">Gönder</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<div class="section pt-0">
+    <div class="container">
+        <div class="map-section" data-aos="fade-up">
+            <iframe src="{{ contact_info.map_embed_url }}" width="100%" height="100%" style="border:0;"
+                allowfullscreen="" loading="lazy" title="Harita"></iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Preload critical JS resources -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js" as="script">
+<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.js" as="script">
+
+<!-- Load lazysizes for lazy loading -->
+<script src="{% static 'js/lazysizes.min.js' %}" async></script>
+
+<!-- Defer non-critical JS -->
+<script>
+// Minimal JavaScript to handle critical functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Load non-critical JS after page is interactive
+    function loadDeferredResources() {
+        const swiperScript = document.createElement('script');
+        swiperScript.src = 'https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js';
+        swiperScript.onload = initSwiper;
+        document.body.appendChild(swiperScript);
+        
+        const aosScript = document.createElement('script');
+        aosScript.src = 'https://unpkg.com/aos@2.3.1/dist/aos.js';
+        aosScript.onload = initAOS;
+        document.body.appendChild(aosScript);
+    }
+    
+    // Initialize Swiper when loaded
+    function initSwiper() {
+        const serviceSwiper = new Swiper('.service-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 2,
+                    spaceBetween: 20
+                },
+                1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 30
+                }
+            }
+        });
+    }
+    
+    // Initialize AOS when loaded
+    function initAOS() {
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    }
+    
+    // Navigation functionality
+    function handleNavigation() {
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+        
+        function setActiveNavItem() {
+            const scrollPosition = window.pageYOffset + 100;
+            
+            document.querySelectorAll('section, .map-section').forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    const id = section.getAttribute('id');
+                    
+                    mobileNavItems.forEach(item => {
+                        item.classList.remove('active');
+                        if (item.getAttribute('href').includes(id)) {
+                            item.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', setActiveNavItem);
+        setActiveNavItem();
+        
+        mobileNavItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const targetElement = document.querySelector(this.getAttribute('href'));
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+    }
+    
+    // Check if browser supports IntersectionObserver for more efficient loading
+    if ('IntersectionObserver' in window) {
+        // Load deferred resources when page is idle
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(loadDeferredResources);
+        } else {
+            // Fallback for browsers without requestIdleCallback
+            setTimeout(loadDeferredResources, 2000);
+        }
+    } else {
+        // Fallback for older browsers
+        loadDeferredResources();
+    }
+    
+    // Initialize navigation
+    handleNavigation();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load compress %}
+
+
+{% block title %}{{ member.name }} - {{ site_owner.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% compress css %}
+<link rel="stylesheet" href="{% static 'css/team_detail.css' %}">
+{% endcompress %}
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="member-hero"
+         style="background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)), url('{% if member.cover_image %}{{ member.cover_image.url }}{% else %}{% endif %}'); background-size: cover; background-position: center;">
+    <div class="container">
+        <h1 data-aos="fade-up">{{ member.name }}</h1>
+        <p data-aos="fade-up" data-aos-delay="100">{{ member.position }}</p>
+    </div>
+</section>
+
+<!-- Üye Detayları -->
+<section class="member-details">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4" data-aos="fade-up">
+                <div class="member-card">
+                    <img src="{{ member.image.url }}" class="member-img" alt="{{ member.name }}">
+                    <div class="member-card-body">
+                        <h3 class="member-name">{{ member.name }}</h3>
+                        <p class="member-position">{{ member.position }}</p>
+                        
+                        <div class="member-contact">
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="tel:{{ member.phone }}" class="btn btn-gold">
+                                    <i class="fas fa-phone me-2"></i> Ara
+                                </a>
+                                <a href="mailto:{{ member.email }}" class="btn btn-outline-gold">
+                                    <i class="fas fa-envelope me-2"></i> E-posta
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <h5 class="fw-bold mb-3">Uzmanlık Alanları</h5>
+                        <div class="expertise-list">
+                        <span class="expertise-badge" data-aos="fade-up" data-aos-delay="200">{{ member.expertise }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+                <div class="member-content">
+                    <h2>Hakkında</h2>
+                    <div class="tinymce-content">
+                        {{ member.bio|safe }}
+                    </div>
+                    
+                    {% if member.education %}
+                    <div class="mt-5">
+                        <h2>Eğitim</h2>
+                        <div class="tinymce-content">
+                            {{ member.education|safe }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if member.experience %}
+                    <div class="mt-5">
+                        <h2>Deneyim</h2>
+                        <div class="tinymce-content">
+                            {{ member.experience|safe }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- İlgili Üyeler -->
+{% if related_members %}
+<section class="related-members">
+    <div class="container">
+        <h2 class="related-title text-center mb-5" data-aos="fade-up">Ekibimizden Diğer Avukatlar</h2>
+        
+        <div class="row g-4">
+            {% for related in related_members %}
+            <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                <div class="related-card">
+                    <img src="{{ related.image.url }}" class="related-img" alt="{{ related.name }}">
+                    <div class="card-body text-center">
+                        <h5 class="related-name fw-bold mb-1">{{ related.name }}</h5>
+                        <p class="related-position mb-3">{{ related.position }}</p>
+                        <p class="small text-muted">{{ related.expertise }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+                        <a href="{% url 'core:team_detail' related.slug %}" class="btn btn-outline-gold btn-sm">Profil</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- İletişim CTA -->
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animasyonları başlat
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    });
+</script>
+{% endblock %}
