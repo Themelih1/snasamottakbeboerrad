@@ -176,7 +176,7 @@
                     <div class="related-post-body">
                         <div class="related-post-date">{{ related.publish_date|date:"d F Y" }}</div>
                         <h5 class="related-post-title">{{ related.title }}</h5>
-                        <a href="{% url 'core:blog_post' related.slug %}" class="related-post-link">
+                        <a href="{% url 'core:blog_detail' related.slug %}" class="related-post-link">
                             Devamını Oku <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
