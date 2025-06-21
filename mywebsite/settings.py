@@ -143,8 +143,13 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'compressor.finders.CompressorFinder']
 
-COMPRESS_ENABLED = True
-COMPRESS_OFFLINE = False
+if not DEBUG:
+    COMPRESS_ENABLED = True
+    COMPRESS_OFFLINE = True
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    COMPRESS_ENABLED = False
+    COMPRESS_OFFLINE = False
 
 if DEBUG:
     MEDIA_URL = '/media/'
@@ -232,9 +237,9 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = not DEBUG  # CSRF cookie should be secure in production
+SECURE_SSL_REDIRECT = not DEBUG  # Redirect all HTTP traffic to HTTPS in production
+SESSION_COOKIE_SECURE = not DEBUG  # Session cookie should be secure in production
 
 
 # CSRF TRUSTED ORIGINS
