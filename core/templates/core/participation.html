@@ -1,0 +1,102 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Meld på aktivitet" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h4 mb-0 text-center">{% trans "Meld på" %}: {{ activity.title }}</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="activity-info mb-4 p-3 bg-light rounded">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="far fa-calendar-alt me-2 text-primary"></i>
+                            <span>{{ activity.date|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                            <span>{{ activity.location }}</span>
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    {% trans "Fornavn" %} *
+                                </label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.first_name.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                    {% trans "Etternavn" %} *
+                                </label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.last_name.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.room_number.id_for_label }}" class="form-label">
+                                {% trans "Romnummer" %} *
+                            </label>
+                            {{ form.room_number }}
+                            {% if form.room_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.room_number.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg py-2">
+                                {% trans "Meld på" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .activity-info {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+    }
+    
+    input:not([type="checkbox"]), select {
+        height: 45px;
+        padding: 10px 15px;
+        border-radius: 4px;
+    }
+    
+    .btn-primary {
+        background-color: #0d6efd;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

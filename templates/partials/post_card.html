@@ -1,0 +1,28 @@
+<!-- templates/core/partials/post_card.html -->
+<div class="card border-0 shadow-sm h-100">
+    {% if post.image %}
+    <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="height: 120px; object-fit: cover;">
+    {% endif %}
+    <div class="card-body">
+        <span class="badge bg-section-{{ post.section }} mb-2">
+            {{ post.get_section_display }}
+        </span>
+        <span class="badge bg-category-{{ post.category }} mb-2">
+            {{ post.get_category_display }}
+        </span>
+        <h3 class="h6 card-title">
+            <a href="{% url 'core:blog_detail' post.pk %}" class="text-decoration-none text-dark">
+                {{ post.title }}
+            </a>
+        </h3>
+        <p class="card-text text-muted small">
+            {{ post.content|striptags|truncatewords:15|safe }}
+        </p>
+    </div>
+    <div class="card-footer bg-transparent border-0 pt-0">
+        <small class="text-muted">
+            <i class="bi bi-calendar me-1"></i>
+            {{ post.created_at|date:"d.m.Y" }}
+        </small>
+    </div>
+</div>

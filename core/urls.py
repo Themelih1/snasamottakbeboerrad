@@ -1,36 +1,25 @@
-from django.urls import path
-from django.views.generic import TemplateView
-from .sitemaps import BlogSitemap, ServiceSitemap
-from . import views
-from .views import tinymce_upload_image
-from django.contrib.sitemaps.views import sitemap
-
-
-# Import your sitemap classes here, for example:
-# from .sitemaps import BlogSitemap, ServiceSitemap
-
-# Define the sitemaps dictionary
-sitemaps = {
-    'blog': BlogSitemap,
-    'services': ServiceSitemap,
-}
-
+from django.urls import path, include
+from django.utils.translation import gettext_lazy as _
+from .views import (
+    index, ActivityListView, ActivityDetailView, 
+    BlogPostListView, BlogPostDetailView,
+    ParticipationCreateView, participation_success,
+    calendar_view, verify_participation
+)
 app_name = 'core'
 
-
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('hizmetler/', views.services, name='services'),
-    path('hizmetler/<slug:slug>/', views.service_detail, name='service_detail'),
-    path('ekibimiz/', views.team, name='team'),
-    path('ekibimiz/<slug:slug>/', views.team_detail, name='team_detail'),
-    path('blog/', views.blog, name='blog'),
-    path('blog/<slug:slug>/yorum/', views.add_comment, name='add_comment'),
-    path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),
-    path('iletisim/', views.contact, name='contact'),
-    path('tinymce/upload_image/', views.tinymce_upload_image, name='tinymce_upload_image'),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
-    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
-
+    path('', index, name='index'),
+    path(_('aktiviteter/'), ActivityListView.as_view(), name='activities'),
+    path(_('aktiviteter/<int:pk>/'), ActivityDetailView.as_view(), name='activity_detail'),
+    path(_('blogg/'), BlogPostListView.as_view(), name='blog'),
+    path(_('blogg/<int:pk>/'), BlogPostDetailView.as_view(), name='blog_detail'),
+    path(_('aktiviteter/<int:pk>/deltakelse/'), ParticipationCreateView.as_view(), name='participation'),
+    path(_('deltakelse/suksess/<int:pk>/'), participation_success, name='participation_success'),  # burası değişti
+    path(_('kalender/'), calendar_view, name='calendar'),
+    path('tinymce/', include('tinymce.urls')),
+    path("verify/<int:pk>/<uuid:token>/", verify_participation, name="verify_participation"),
+    path('verify-participation/<int:pk>/<str:token>/', verify_participation, name='verify_participation'),
 ]
+
 

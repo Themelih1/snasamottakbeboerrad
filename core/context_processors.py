@@ -1,15 +1,9 @@
-from django.conf import settings
-from .models import ContactInfo
+from .models import Activity
+import datetime
 
 
-def global_settings(request):
+def navbar_context(request):
+    upcoming_activities = Activity.objects.filter(date__gte=datetime.datetime.now()).order_by('date')[:5]
     return {
-        'debug': settings.DEBUG,
+        'upcoming_activities_nav': upcoming_activities
     }
-
-def contact_info(request):
-    try:
-        info = ContactInfo.objects.first()
-    except ContactInfo.DoesNotExist:
-        info = None
-    return {'contact_info': info}

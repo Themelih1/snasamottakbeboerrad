@@ -45,5 +45,6 @@ tzdata==2025.1
 urllib3==2.3.0
 whitenoise==6.9.0
 django-compressor
+openpyxl
 
 

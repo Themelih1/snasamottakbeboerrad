@@ -1,238 +1,176 @@
 from django.db import models
-from cloudinary.models import CloudinaryField
-from tinymce.models import HTMLField
+from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
-from django.urls import reverse
 from django.utils import timezone
+from tinymce.models import HTMLField
+from cloudinary.models import CloudinaryField
+import uuid
 
-class SiteOwner(models.Model):
-    name = models.CharField("Ad Soyad", max_length=100)
-    position = models.CharField("Pozisyon/Ünvan", max_length=100)
-    image = CloudinaryField("Profil Fotoğrafı", folder="lawyer_profile")
-    about_image = CloudinaryField("Hakkımda Görseli", folder="lawyer_about", blank=True, null=True)
-    short_bio = models.TextField("Kısa Bio", max_length=200)
-    bio = HTMLField("Detaylı Bio")
-    quote = HTMLField("Özlü Söz", blank=True, null=True)
-    quote_author = models.CharField("Söz Sahibi", max_length=100, blank=True, null=True)
-    
-    class Meta:
-        verbose_name = "Site Sahibi"
-        verbose_name_plural = "Site Sahibi"
-    
-    def __str__(self):
-        return self.name
-
-class Service(models.Model):
-    ICON_CHOICES = (
-        ('fas fa-gavel', 'Ceza Hukuku'),
-        ('fas fa-home', 'Gayrimenkul Hukuku'),
-        ('fas fa-briefcase', 'İş Hukuku'),
-        ('fas fa-users', 'Aile Hukuku'),
-        ('fas fa-file-contract', 'Sözleşmeler'),
-        ('fas fa-landmark', 'Ticaret Hukuku'),
-        ('fas fa-university', 'İdare Hukuku'),
-        ('fas fa-heartbeat', 'Sağlık Hukuku'),
-        ('fas fa-balance-scale', 'Miras Hukuku'),
-        ('fas fa-plane-departure', 'Göçmenlik Hukuku'),
-        ('fas fa-shield-alt', 'Sigorta Hukuku'),
-        ('fas fa-globe', 'Uluslararası Hukuk'),
-        ('fas fa-shield-virus', 'Tüketici Hukuku'),
-        ('fas fa-child', 'Çocuk Hukuku'),
-        ('fas fa-industry', 'Enerji ve Maden Hukuku'),
-        ('fas fa-leaf', 'Çevre Hukuku'),
-        )
-    
-    title = models.CharField("Başlık", max_length=100)
-    slug = models.SlugField("SEO URL", unique=True)
-    icon = models.CharField("İkon", max_length=50, choices=ICON_CHOICES)
-    excerpt = models.CharField("Kısa Açıklama", max_length=200)
-    description = HTMLField("Kısa Açıklama")
-    detailed_content = HTMLField("Detaylı İçerik")
-    cover_image = CloudinaryField("Kapak Görseli", folder="service_covers", blank=True, null=True)
-    is_featured = models.BooleanField("Öne Çıkan", default=False)
-    order = models.PositiveIntegerField("Sıralama", default=0)
+class Activity(models.Model):
+    title = models.CharField(_('Tittel'), max_length=200)
+    slug = models.SlugField(unique=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    date = models.DateTimeField(default=timezone.now) 
+    location = models.CharField(_('Sted'), max_length=200)
+    image = CloudinaryField(_('Bilde'), folder='mottak/activities')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_published = models.BooleanField(default=True)
-    
     
     class Meta:
-        verbose_name = "Hizmet"
-        verbose_name_plural = "Hizmetler"
-        ordering = ['order', 'title']
-    
-    def __str__(self):
-        return self.title
-    
-    def get_absolute_url(self):
-        return reverse('service_detail', kwargs={'slug': self.slug})
-
-class ServiceProcess(models.Model):
-    title = models.CharField("Başlık", max_length=100)
-    content = HTMLField("İçerik")
-    image = CloudinaryField("Görsel", folder="service_process")
-    
-    class Meta:
-        verbose_name = "Hizmet Süreci"
-        verbose_name_plural = "Hizmet Süreci"
-    
-    def __str__(self):
-        return self.title
-
-class TeamMember(models.Model):
-    name = models.CharField("Ad Soyad", max_length=100)
-    position = models.CharField("Pozisyon", max_length=100)
-    expertise = models.CharField("Uzmanlık Alanı", max_length=200)
-    expertise_list = models.TextField("Uzmanlık Listesi", help_text="Virgülle ayırarak girin")
-    image = CloudinaryField("Fotoğraf", folder="team_members")
-    cover_image = CloudinaryField("Kapak Fotoğrafı", folder="team_covers", blank=True, null=True)
-    bio = HTMLField("Biyografi")
-    education = HTMLField("Eğitim", blank=True, null=True)
-    experience = HTMLField("Deneyim", blank=True, null=True)
-    phone = models.CharField("Telefon", max_length=20)
-    email = models.EmailField("E-posta")
-    slug = models.SlugField(unique=True, blank=True, null=True, help_text="Bu alan otomatik olarak oluşturulacaktır")
-    is_active = models.BooleanField("Aktif Mi?", default=True)
-    order = models.PositiveIntegerField("Sıralama", default=0)
-
+        verbose_name = _('Aktivitet')
+        verbose_name_plural = _('Aktiviteter')
+        ordering = ['-date']
+        
     def save(self, *args, **kwargs):
-        if not self.slug or self.slug == '':
-            base_slug = slugify(self.name)
-            self.slug = base_slug
-            counter = 1
-            while TeamMember.objects.filter(slug=self.slug).exists():
-                self.slug = f"{base_slug}-{counter}"
-                counter += 1
-        super().save(*args, **kwargs)
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs) 
 
-    def __str__(self):
-        return self.name
-
-class TeamAbout(models.Model):
-    title = models.CharField("Başlık", max_length=100)
-    content = HTMLField("İçerik")
-    image = CloudinaryField("Görsel", folder="team_about")
-    
-    class Meta:
-        verbose_name = "Ekip Hakkında"
-        verbose_name_plural = "Ekip Hakkında"
+class SiteSettings(models.Model):
+    hero_image = CloudinaryField('hero_image', blank=True, null=True)
     
     def __str__(self):
-        return self.title
-
-class BlogCategory(models.Model):
-    name = models.CharField("Kategori Adı", max_length=100)
-    slug = models.SlugField("SEO URL", unique=True)
-    
-    class Meta:
-        verbose_name = "Blog Kategorisi"
-        verbose_name_plural = "Blog Kategorileri"
-    
-    def __str__(self):
-        return self.name
-
-class BlogTag(models.Model):
-    name = models.CharField("Etiket Adı", max_length=50)
-    slug = models.SlugField("SEO URL", unique=True)
-    
-    class Meta:
-        verbose_name = "Blog Etiketi"
-        verbose_name_plural = "Blog Etiketleri"
-    
-    def __str__(self):
-        return self.name
+        return "Innstillinger"
 
 class BlogPost(models.Model):
-    title = models.CharField("Başlık", max_length=200)
-    slug = models.SlugField("SEO URL", unique=True, blank=False,
-                          max_length=200, help_text="Bu alan otomatik olarak oluşturulacaktır")
-    thumbnail = CloudinaryField("Kapak Görseli", folder="blog_thumbnails")
-    cover_image = CloudinaryField("Detay Görseli", folder="blog_covers", blank=True, null=True)
-    category = models.ForeignKey(BlogCategory, on_delete=models.SET_NULL, null=True, verbose_name="Kategori")
-    tags = models.ManyToManyField(BlogTag, blank=True, verbose_name="Etiketler")
-    summary = HTMLField("Özet")
-    content = HTMLField("İçerik")
-    publish_date = models.DateTimeField("Yayın Tarihi", auto_now_add=True)
-    is_published = models.BooleanField("Yayında Mı?", default=True)
-    is_featured = models.BooleanField("Öne Çıkan", default=False)
+    SECTION_CHOICES = [
+        ('EDUCATION', _('Undervisningskalender')),
+        ('GUIDE', _('Veiledning for nyankomne')),
+        ('ANNOUNCEMENT', _('Kunngjøringstavle')),
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('Generell', _('Generell kunngjøring')),
+        ('Aktivitet', _('Aktivitet')),
+        ('Viktige', _('Nødssituasjon')),
+        ('Meny', _('Meny')),
+        ('Annonser', _('Offisiell kunngjøring')),
+    ]
+    
+    title = models.CharField(_('Tittel'), max_length=200)
+    slug = models.SlugField(_('URL'), max_length=250, unique=True, blank=True)
+    content = HTMLField(_('Innhold'))
+    image = CloudinaryField(
+        _('Bilde'), 
+        folder='mottak/blog', 
+        blank=True, 
+        null=True,
+        transformation=[
+            {'width': 800, 'height': 600, 'crop': 'fill'},
+            {'quality': 'auto'}
+        ],
+        format='webp'
+    )
+    created_at = models.DateTimeField(_('Opprettet'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Oppdatert'), auto_now=True)
+    is_published = models.BooleanField(_('Publiser'), default=True)
+    is_pinned = models.BooleanField(_('Fest til toppen'), default=False,
+                                  help_text=_('Denne kunngjøringen vil vises øverst'))
+    is_important = models.BooleanField(_('Viktig'), default=False,
+                                     help_text=_('Viktige kunngjøringer vil bli fremhevet'))
+    section = models.CharField(
+        _('Seksjon'),
+        max_length=15,
+        choices=SECTION_CHOICES,
+        default='ANNOUNCEMENT'
+    )
+    category = models.CharField(
+        _('Kategori'), 
+        max_length=10, 
+        choices=CATEGORY_CHOICES, 
+        default='GENEL'
+    )
+    view_count = models.PositiveIntegerField(_('Visninger'), default=0)
+    author = models.ForeignKey(
+        'auth.User',
+        verbose_name=_('Forfatter'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
     
     class Meta:
-        verbose_name = "Blog Yazısı"
-        verbose_name_plural = "Blog Yazıları"
-        ordering = ['-publish_date']
+        verbose_name = _('Kunngjøring')
+        verbose_name_plural = _('Kunngjøringer')
+        ordering = ['-is_important', '-is_pinned', '-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['is_published']),
+            models.Index(fields=['category']),
+            models.Index(fields=['section']),
+        ]
     
     def __str__(self):
         return self.title
     
     def save(self, *args, **kwargs):
-        if not self.slug or self.slug == '':
-            base_slug = slugify(self.title)
-            self.slug = base_slug
+        if not self.slug:
+            self.slug = slugify(self.title)
             counter = 1
             while BlogPost.objects.filter(slug=self.slug).exists():
-                self.slug = f"{base_slug}-{counter}"
+                self.slug = f"{slugify(self.title)}-{counter}"
                 counter += 1
-        if self.is_published and not self.publish_date:
-            self.publish_date = timezone.now()
+        
+        if self.image:
+            self.image.format = 'webp'
+        
         super().save(*args, **kwargs)
     
-    def get_absolute_url(self):
-        return reverse('blog_detail', kwargs={'slug': self.slug})
+    def increment_view_count(self):
+        self.view_count += 1
+        self.save(update_fields=['view_count'])
 
-class BlogComment(models.Model):
-    post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='comments')
-    name = models.CharField("Ad Soyad", max_length=100)
-    email = models.EmailField("E-posta")
-    content = models.TextField("Yorum")
-    created_at = models.DateTimeField("Oluşturulma Tarihi", auto_now_add=True)
-    is_approved = models.BooleanField("Onaylandı Mı?", default=True)
+class ModuleCalendar(models.Model):
+    title = models.CharField(_('Tittel'), max_length=200)
+    week_range = models.CharField(_('Ukeperiode'), max_length=100)
+    schedule = models.JSONField(_('Timeplan'))
+    is_active = models.BooleanField(_('Aktiv kalender'), default=True)
+    start_date = models.DateField(_('Startdato'))
+    end_date = models.DateField(_('Sluttdato'))
+    created_at = models.DateTimeField(_('Opprettet'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Oppdatert'), auto_now=True)
+    
+    def __str__(self):
+        return f"{self.title} - {self.week_range}"
+    
+    def get_week_schedule(self):
+        """Prosesserer JSON-data og returnerer ukeplan"""
+        try:
+            return {
+                'monday': self.schedule.get('monday', []),
+                'tuesday': self.schedule.get('tuesday', []),
+                'wednesday': self.schedule.get('wednesday', []),
+                'thursday': self.schedule.get('thursday', []),
+                'friday': self.schedule.get('friday', []),
+            }
+        except:
+            return {}
     
     class Meta:
-        verbose_name = "Blog Yorumu"
-        verbose_name_plural = "Blog Yorumları"
+        verbose_name = _('Modulkalender')
+        verbose_name_plural = _('Modulkalendere')
+        ordering = ['-start_date']
+
+class ParticipationRequest(models.Model):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, verbose_name=_('Aktivitet'))
+    first_name = models.CharField(_('Fornavn'), max_length=100)
+    last_name = models.CharField(_('Etternavn'), max_length=100)
+    room_number = models.CharField(_('Romnummer'), max_length=20)
+    email = models.EmailField(_('E-post'), blank=True, null=True)
+    phone = models.CharField(_('Telefonnummer'), max_length=20, blank=True, null=True)
+    special_needs = models.TextField(_('Spesielle behov'), blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(_('Godkjent'), default=False)
+    token = models.CharField(max_length=36, unique=True, default=uuid.uuid4, editable=False)
+    
+    class Meta:
+        verbose_name = _('Deltakelsesforespørsel')
+        verbose_name_plural = _('Deltakelsesforespørsler')
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.name} - {self.post.title}"
-
-class ContactInfo(models.Model):
-    address = models.TextField("Adres")
-    phone = models.CharField("Telefon", max_length=20)
-    email = models.EmailField("E-posta")
-    working_hours = models.TextField("Çalışma Saatleri")
-    map_embed_url = models.TextField("Harita Embed URL")
+        return f"{self.first_name} {self.last_name} - {self.activity.title}"
     
-    class Meta:
-        verbose_name = "İletişim Bilgisi"
-        verbose_name_plural = "İletişim Bilgileri"
-    
-    def __str__(self):
-        return "İletişim Bilgileri"
-
-class KVKKContent(models.Model):
-    title = models.CharField("Başlık", max_length=100)
-    content = HTMLField("İçerik")
-    
-    class Meta:
-        verbose_name = "KVKK İçeriği"
-        verbose_name_plural = "KVKK İçeriği"
-    
-    def __str__(self):
-        return self.title
-
-class ContactMessage(models.Model):
-    name = models.CharField("Ad Soyad", max_length=100)
-    email = models.EmailField("E-posta")
-    phone = models.CharField("Telefon", max_length=20, blank=True, null=True)
-    subject = models.CharField("Konu", max_length=100)
-    message = models.TextField("Mesaj")
-    created_at = models.DateTimeField("Oluşturulma Tarihi", auto_now_add=True)
-    is_read = models.BooleanField("Okundu Mu?", default=False)
-    
-    class Meta:
-        verbose_name = "İletişim Mesajı"
-        verbose_name_plural = "İletişim Mesajları"
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.name} - {self.subject}"
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"

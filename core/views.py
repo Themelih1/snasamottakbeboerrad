@@ -1,185 +1,264 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.paginator import Paginator
-from django.contrib import messages
-from .models import *
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from cloudinary.uploader import upload
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView, CreateView
+from django.urls import reverse_lazy, reverse
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from .models import Activity, BlogPost, ParticipationRequest, SiteSettings
+from .forms import ParticipationRequestForm
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+import os
+from django.conf import settings
+import datetime
+import qrcode
+import base64
+from io import BytesIO
+from django.views.generic import ListView, TemplateView
+from .models import BlogPost, ModuleCalendar
 
 
-def home(request):
-    site_owner = SiteOwner.objects.first()
-    services = Service.objects.filter(is_featured=True)[:6]
-    team_members = TeamMember.objects.filter(
-        is_active=True,
-        slug__isnull=False
-    ).exclude(slug='').order_by('order')[:4]
+def index(request):
+    featured_activities = Activity.objects.filter(date__gte=timezone.now()).order_by('date')[:3]
+    latest_posts = BlogPost.objects.filter(is_published=True).order_by('-created_at')[:3]
     
-    recent_posts = BlogPost.objects.filter(
-        is_published=True,
-        publish_date__lte=timezone.now(),
-        slug__isnull=False
-    ).exclude(slug='').order_by('-publish_date')[:3]
-    contact_info = ContactInfo.objects.first()
+    site_settings = SiteSettings.objects.first()  # İlk SiteSettings objesini çek
     
     context = {
-        'site_owner': site_owner,
-        'services': services,
-        'team_members': team_members,
-        'recent_posts': recent_posts,
-        'contact_info': contact_info,
+        'featured_activities': featured_activities,
+        'latest_posts': latest_posts,
+        'hero_image': site_settings.hero_image if site_settings else None,
     }
     return render(request, 'core/index.html', context)
-def services(request):
-    services = Service.objects.all().order_by('order')
-    service_process = ServiceProcess.objects.first()
-    
-    context = {
-        'services': services,
-        'service_process': service_process,
-    }
-    return render(request, 'core/services.html', context)
 
-def service_detail(request, slug):
-    service = get_object_or_404(Service, slug=slug)
-    related_services = Service.objects.exclude(id=service.id).filter(is_featured=True)[:3]
+class ActivityListView(ListView):
+    model = Activity
+    template_name = 'core/activities.html'
+    context_object_name = 'activities'
+    paginate_by = 10
     
-    context = {
-        'service': service,
-        'related_services': related_services,
-    }
-    return render(request, 'core/service_detail.html', context)
-
-def team(request):
-    team_members = TeamMember.objects.filter(is_active=True).order_by('order')
-    team_about = TeamAbout.objects.first()
-    
-    context = {
-        'team_members': team_members,
-        'team_about': team_about,
-    }
-    return render(request, 'core/team.html', context)
-
-def team_detail(request, slug):
-    member = get_object_or_404(TeamMember, slug=slug, is_active=True)
-    related_members = TeamMember.objects.exclude(id=member.id).filter(is_active=True).order_by('?')[:4]
-    
-    context = {
-        'member': member,
-        'related_members': related_members,
-    }
-    return render(request, 'core/team_detail.html', context)
-
-def blog(request):
-    posts_list = BlogPost.objects.filter(is_published=True).exclude(slug__isnull=True).exclude(slug='').order_by('-publish_date')
-    categories = BlogCategory.objects.all()
-    
-    # Arama
-    query = request.GET.get('q')
-    if query:
-        posts_list = posts_list.filter(title__icontains=query)
-    
-    # Kategori filtresi
-    category_slug = request.GET.get('category')
-    if category_slug:
-        print("Filtering category slug:", category_slug)
-        category = get_object_or_404(BlogCategory, slug=category_slug)
-        posts_list = posts_list.filter(category=category)
-    
-    # Etiket filtresi
-    tag_slug = request.GET.get('tag')
-    if tag_slug:
-        tag = get_object_or_404(BlogTag, slug=tag_slug)
-        posts_list = posts_list.filter(tags=tag)
-    
-    # Sayfalama
-    paginator = Paginator(posts_list, 6)
-    page_number = request.GET.get('page')
-    posts = paginator.get_page(page_number)
-    
-    context = {
-        'posts': posts,
-        'categories': categories,
-    }
-    return render(request, 'core/blog.html', context)
-
-def blog_detail(request, slug):
-    post = get_object_or_404(BlogPost, slug=slug, is_published=True)
-    related_posts = BlogPost.objects.exclude(id=post.id).filter(is_published=True).order_by('?')[:3]
-    site_owner = SiteOwner.objects.first()
-    comments = BlogComment.objects.filter(post=post)
-    
-    context = {
-        'post': post,
-        'related_posts': related_posts,
-        'site_owner': site_owner,
-        'comments': comments
-    }
-    return render(request, 'core/blog_detail.html', context)
-
-
-
-def add_comment(request, slug):
-    if request.method == 'POST':
-        post = get_object_or_404(BlogPost, slug=slug)
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        content = request.POST.get('content')
+    def get_queryset(self):
+        queryset = Activity.objects.filter(date__gte=timezone.now()).order_by('date')
         
-        if not all([name, email, content]):
-            messages.error(request, 'Lütfen tüm alanları doldurun.')
-        else:
-            BlogComment.objects.create(
-                post=post,
-                name=name,
-                email=email,
-                content=content,
-                is_approved=False  # Yorumlar önce onay bekler
+        # Arama filtresi
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | 
+                Q(description__icontains=search_query) |
+                Q(location__icontains=search_query)
             )
-            messages.success(request, 'Yorumunuz başarıyla gönderildi. Onaylandıktan sonra yayınlanacaktır.')
-    
-    return redirect('core:blog_detail', slug=slug) 
-
-
-def contact(request):
-    contact_info = ContactInfo.objects.first()
-    kvkk_content = KVKKContent.objects.first()
-    
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone', '')
-        subject = request.POST.get('subject')
-        message = request.POST.get('message')
         
-        if not all([name, email, subject, message]):
-            messages.error(request, 'Lütfen zorunlu alanları doldurun.')
-        else:
-            ContactMessage.objects.create(
-                name=name,
-                email=email,
-                phone=phone,
-                subject=subject,
-                message=message
-            )
-            messages.success(request, 'Mesajınız başarıyla gönderildi. En kısa sürede dönüş yapılacaktır.')
-            return redirect('core:contact')
-    
-    context = {
-        'contact_info': contact_info,
-        'kvkk_content': kvkk_content,
-        'site_owner': SiteOwner.objects.first()
-    }
-    return render(request, 'core/contact.html', context)
+        # Tarih filtresi
+        date_filter = self.request.GET.get('date')
+        if date_filter:
+            try:
+                filter_date = datetime.datetime.strptime(date_filter, '%Y-%m-%d').date()
+                queryset = queryset.filter(date__date=filter_date)
+            except ValueError:
+                pass
+                
+        # Lokasyon filtresi
+        location_filter = self.request.GET.get('location')
+        if location_filter:
+            queryset = queryset.filter(location__icontains=location_filter)
+            
+        return queryset
 
-@csrf_exempt
-def tinymce_upload_image(request):
-    if request.method == 'POST' and request.FILES.get('file'):
-        image = request.FILES['file']
-        try:
-            upload_result = upload(image, folder="tinymce_uploads")
-            return JsonResponse({'location': upload_result['secure_url']})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+class ActivityDetailView(DetailView):
+    model = Activity
+    template_name = 'core/activity_detail.html'
+    context_object_name = 'activity'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['approved_participants'] = ParticipationRequest.objects.filter(
+            activity=self.object,
+            is_approved=True
+        ).order_by('created_at')
+        return context
+    
+
+class BlogPostListView(ListView):
+    model = BlogPost
+    template_name = 'core/announcements.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        queryset = BlogPost.objects.filter(is_published=True)
+        
+        # Section filter
+        section = self.request.GET.get('section')
+        if section:
+            queryset = queryset.filter(section=section)
+        else:
+            # Default to showing all sections but ordered by section
+            queryset = queryset.order_by('section')
+        
+        # Category filter
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        # Special filters
+        filter_type = self.request.GET.get('filter')
+        if filter_type == 'important':
+            queryset = queryset.filter(is_important=True)
+        elif filter_type == 'pinned':
+            queryset = queryset.filter(is_pinned=True)
+        
+        return queryset.order_by('-is_important', '-is_pinned', '-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Active module calendar
+        context['active_calendar'] = ModuleCalendar.objects.filter(
+            is_active=True
+        ).first()
+        
+        # Section choices
+        context['sections'] = BlogPost.SECTION_CHOICES
+        
+        # Category choices
+        context['categories'] = BlogPost.CATEGORY_CHOICES
+        
+        # Selected filters
+        context['selected_section'] = self.request.GET.get('section')
+        context['selected_category'] = self.request.GET.get('category')
+        
+        # Get important posts for each section if no filters are applied
+        if not any([self.request.GET.get('section'), 
+                   self.request.GET.get('category'), 
+                   self.request.GET.get('filter')]):
+            
+            context['education_posts'] = BlogPost.objects.filter(
+                is_published=True, 
+                section='EDUCATION',
+                is_important=True
+            ).order_by('-created_at')[:3]
+            
+            context['guide_posts'] = BlogPost.objects.filter(
+                is_published=True, 
+                section='GUIDE',
+                is_important=True
+            ).order_by('-created_at')[:3]
+            
+            context['announcement_posts'] = BlogPost.objects.filter(
+                is_published=True, 
+                section='ANNOUNCEMENT',
+                is_important=True
+            ).order_by('-created_at')[:3]
+            
+        return context
+
+class BlogPostDetailView(DetailView):
+    model = BlogPost
+    template_name = 'core/blog_detail.html'
+    context_object_name = 'post'
+
+class ParticipationCreateView(CreateView):
+    model = ParticipationRequest
+    form_class = ParticipationRequestForm
+    template_name = 'core/participation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['activity'] = get_object_or_404(Activity, pk=self.kwargs['pk'])
+        return context
+    
+    def form_valid(self, form):
+        form.instance.activity = get_object_or_404(Activity, pk=self.kwargs['pk'])
+        response = super().form_valid(form)
+        self.object = form.save()  # kayıt edilen participation objesi
+        return response
+
+    def get_success_url(self):
+        return reverse('core:participation_success', kwargs={'pk': self.object.pk})
+    
+def participation_success(request, pk):
+    participation = get_object_or_404(ParticipationRequest, pk=pk)
+    activity = participation.activity
+
+    # QR kod için içerik belirle (örneğin, katılım ID'si ve etkinlik bilgisi)
+    qr_data = request.build_absolute_uri(
+    reverse('core:verify_participation', args=[participation.pk, participation.token])
+)
+    # QR kod oluştur
+    qr = qrcode.make(qr_data)
+
+    # QR kodu base64 string'e çevir (PNG formatında)
+    buffered = BytesIO()
+    qr.save(buffered, format="PNG")
+    qr_b64 = base64.b64encode(buffered.getvalue()).decode()
+
+    context = {
+        'participation': participation,
+        'activity': activity,
+        'qr_code': qr_b64,  # base64 olarak gönderiyoruz
+    }
+    return render(request, 'core/participation_success.html', context)
+
+
+
+def calendar_view(request):
+    SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+    
+    try:
+        # Service account credentials
+        creds = service_account.Credentials.from_service_account_file(
+            os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"),
+            scopes=SCOPES
+        )
+        
+        service = build('calendar', 'v3', credentials=creds)
+
+        # Zaman aralığı belirle (önümüzdeki 3 ay)
+        now = datetime.datetime.utcnow().isoformat() + 'Z'
+        future = (datetime.datetime.utcnow() + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+        events_result = service.events().list(
+            calendarId=getattr(settings, 'GOOGLE_CALENDAR_ID', 'primary'),
+            timeMax=future,
+            maxResults=50,
+            singleEvents=True,  
+            orderBy='startTime'
+        ).execute()
+
+        events = []
+        for event in events_result.get('items', []):
+            # Etkinlik başlangıç ve bitiş zamanlarını işle
+            start = event['start'].get('dateTime') or event['start'].get('date')
+            end = event['end'].get('dateTime') or event['end'].get('date')
+            
+            events.append({
+                'id': event.get('id'),
+                'summary': event.get('summary', 'No Title'),
+                'start': start,
+                'end': end,
+                'description': event.get('description', ''),
+                'location': event.get('location', ''),
+                'color': event.get('colorId', '')  # Renk ID'si (isteğe bağlı)
+            })
+
+        context = {
+            'events': events,
+            'calendar_id': getattr(settings, 'GOOGLE_CALENDAR_ID', 'primary'),
+        }
+
+    except Exception as e:
+        # Hata durumunda boş bir takvim göster
+        context = {
+            'events': [],
+            'error': str(e)
+        }
+
+    return render(request, 'core/calendar.html', context)
+
+
+def verify_participation(request, pk, token):
+    participation = get_object_or_404(ParticipationRequest, pk=pk, token=token)
+
+    return render(request, "core/verify_success.html", {"participation": participation})  

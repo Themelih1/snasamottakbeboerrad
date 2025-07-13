@@ -1,0 +1,291 @@
+ /* Genel Stiller */
+    #calendar {
+        margin: 15px 0;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        min-height: 600px;
+    }
+    
+    /* Sabit başlık için stil */
+    .fc-scrollgrid-section-header {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Etkinlik Stilleri */
+    .fc-event {
+        cursor: pointer;
+        font-size: 0.85em;
+        padding: 3px 5px;
+        margin: 1px 0;
+        border-radius: 6px;
+        border: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+    }
+    .fc-event:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    
+    .fc-event-past {
+        opacity: 0.7;
+        background-color: #be060694 !important;
+        border-color: #dee2e6 !important;
+        color: #6c757d !important;
+    }
+    
+    /* Başlık ve Araç Çubuğu */
+    .fc-toolbar {
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px !important;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 1.9em;
+        font-weight: 600;
+        color: #0066ff;
+        order: 1;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .fc-button {
+        padding: 0.5em 1em;
+        font-size: 0.9em;
+        background-color: #2692fd;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+    
+    .fc-button:hover {
+        background-color: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+    }
+    
+    /* Bugünün günü için özel stil */
+    .fc-day-today {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+    
+    /* Gün başlıkları */
+    .fc-col-header-cell {
+        padding: 8px 4px;
+    }
+    
+    .fc-col-header-cell-cushion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #495057;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+    
+    .fc-day-name {
+        font-size: 1em;
+        text-transform: uppercase;
+        color: #002a4e;
+        margin-bottom: 4px;
+    }
+    
+    .fc-day-number {
+        font-size: 1.1em;
+        font-weight: 500;
+        color: #006fdf;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    .fc-day-today .fc-day-number {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    /* Hafta sonu günleri */
+    .fc-day-sat, .fc-day-sun {
+        background-color: #f8f9fa;
+    }
+    
+    /* Hafta sonu gizleme */
+    .hide-weekends .fc-day-sat, 
+    .hide-weekends .fc-day-sun {
+        display: none !important;
+    }
+    
+    /* Hafta sonu butonu */
+    .weekend-toggle {
+        position: relative;
+    }
+    
+    .weekend-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.7em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Modal Stilleri */
+    .event-modal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .event-modal .modal-header {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .event-modal .modal-body {
+        padding-top: 0;
+    }
+    
+    .event-modal .modal-title {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1.3rem;
+    }
+    
+    .event-detail-icon {
+        margin-right: 12px;
+        color: #6c757d;
+        width: 20px;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255,255,255,0.8);
+        z-index: 1000;
+        border-radius: 10px;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #0d6efd;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Mobil Özel Stiller */
+    @media (max-width: 768px) {
+        #calendar {
+            min-height: 70vh;
+            margin: 10px 0;
+        }
+        
+        /* Mobilde sabit başlık için ek stil */
+        .fc-scrollgrid-section-header {
+            position: -webkit-sticky; /* Safari desteği */
+            top: 0;
+        }
+        
+        .fc-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        
+        .fc-toolbar-chunk {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .fc-toolbar-title {
+            font-size: 1.5em;
+            margin: 5px 0;
+        }
+        
+        .fc-button {
+            padding: 0.4em 0.8em;
+            font-size: 0.85em;
+        }
+        
+        .fc-col-header-cell-cushion {
+            font-size: 0.8em;
+        }
+        
+        .fc-day-name {
+            font-size: 0.9em;
+            display: block !important;
+        }
+        
+        .fc-day-number {
+            width: 24px;
+            height: 24px;
+            font-size: 0.9em;
+        }
+        
+        .weekend-badge {
+            width: 16px;
+            height: 16px;
+            font-size: 0.6em;
+        }
+    }
+    
+    /* Çok küçük ekranlar */
+    @media (max-width: 480px) {
+        .fc-toolbar-chunk {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .fc-button {
+            padding: 0.3em 0.6em;
+            font-size: 0.8em;
+        }
+        
+        .fc-col-header-cell-cushion {
+            padding: 2px;
+            font-size: 0.75em;
+        }
+        
+        .fc-day-name {
+            font-size: 0.8em;
+        }
+    }

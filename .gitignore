@@ -2,6 +2,9 @@
 .env
 __pycache__/
 *.pyc
+/config/google_credentials.json
+venv/
+
 
 # Django static & media (deployment sonrası klasörler)
 staticfiles/

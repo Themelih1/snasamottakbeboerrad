@@ -1,382 +1,173 @@
-{% extends 'core/base.html' %}
+{% extends "core/base.html" %}
 {% load static %}
-{% load compress %}
-
-
+{% load i18n %}
 {% block extra_css %}
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css"></noscript>
-<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css"></noscript>
-<link rel="preload" href="{% static 'css/index.css' %}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-{% compress css %}
-<noscript><link rel="stylesheet" href="{% static 'css/index.css' %}"></noscript>
-{% endcompress %}
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="{% static 'css/index.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6" data-aos="fade-right">
-                <h1 class="hero-title fw-bold mb-4">{{ site_owner.position }} <br><span
-                        class="text-white">{{site_owner.name }}</span></h1>
-                <p class="lead mb-4">{{ site_owner.short_bio }}</p>
-            </div>
-            <div class="col-lg-6 mt-5 mt-lg-0" data-aos="fade-left">
-                <img src="{{ site_owner.image.url }}" alt="{{ site_owner.name }}" 
-                     class="img-fluid rounded shadow-lg lazyload"
-                     style="max-height: 600px;"
-                     loading="lazy"
-                     width="600" height="600">
+<!-- Optimized Hero Section for Mobile -->
+<div class="hero-section">
+    <div class="hero-image-container">
+        {% if hero_image %}
+        <img src="{{ hero_image.url }}" alt="Mottak for asylsøkere" class="hero-image">
+        {% else %}
+        <div class="hero-placeholder"></div>
+        {% endif %}
+        <div class="hero-gradient-overlay"></div>
+    </div>
+
+    <div class="hero-content-container">
+        <div class="container">
+            <div class="hero-content text-center text-md-start">
+                <h1 class="hero-title animate__animated animate__fadeInDown">
+                    {% trans "Velkommen til Snåsa Mottak Beboerrad" %}
+                </h1>
+                <p class="hero-subtitle animate__animated animate__fadeIn animate__delay-1s">
+                    {% trans "" %}
+                </p>
             </div>
         </div>
     </div>
-</section>
+</div>
 
-<!-- About Section -->
-<section id="about" class="section bg-light">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-5 mb-5 mb-lg-0">
-                <div class="position-relative about-img">
-                    <img src="{{ site_owner.about_image.url }}" alt="{{ site_owner.name }}" 
-                         class="img-fluid rounded-3 lazyload"
-                         loading="lazy"
-                         width="500" height="500">
-                </div>
-            </div>
-            <div class="col-lg-7" data-aos="fade-up" data-aos-delay="200">
-                <h2 class="section-title fw-bold text-center">Hakkımda</h2>
-                <div class="tinymce-content fs-7">
-                    {{ site_owner.bio|safe }}
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Hizmetler Bölümü -->
-<section class="section bg-white">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title fw-bold">Hizmetlerimiz</h2>
-            <p class="lead text-muted">Uzmanlık alanlarımız</p>
-        </div>
-
-        <div class="swiper service-swiper">
-            <div class="swiper-wrapper">
-                {% for service in services|slice:":3" %}
-                <div class="swiper-slide">
-                    <div class="card h-100 border-0 shadow-sm service-card">
-                        <div class="card-body text-center">
-                            <div class="icon-box mb-4">
-                                <i class="{{ service.icon }} fa-2x"></i>
-                            </div>
-                            <h4 class="fw-bold mb-3">{{ service.title }}</h4>
-                            <div class="tinymce-content">
-                                {{ service.description|safe|truncatewords_html:30 }}
-                            </div>
-                            <a href="{% url 'core:service_detail' service.slug %}" class="btn btn-link mt-3">
-                                Detaylı Bilgi <i class="fas fa-arrow-right ms-2"></i>
-                            </a>
-                        </div>
+<!-- Main Content Section -->
+<div class="container py-4 py-lg-5">
+    <!-- Latest News Section - Enhanced -->
+    <div class="row justify-content-center mb-4 mb-lg-5">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h2 class="h5 mb-0">
+                            <i class="bi bi-newspaper me-2"></i> {% trans "Siste nytt" %}
+                        </h2>
+                        <a href="{% url 'core:blog' %}" class="btn btn-sm btn-outline-light">
+                            {% trans "Se alle" %} <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
                     </div>
                 </div>
-                {% endfor %}
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for post in latest_posts %}
+                        <a href="{% url 'core:blog_detail' post.pk %}" 
+                           class="list-group-item list-group-item-action border-0 py-3 px-3 px-lg-4">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-light rounded-circle p-2">
+                                        <i class="bi bi-newspaper text-primary fs-5"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                                        <h5 class="mb-1">{{ post.title }}</h5>
+                                        <small class="text-muted ms-md-3">{{ post.created_at|date:"d.m.Y" }}</small>
+                                    </div>
+                                    <p class="text-muted mb-0">{{ post.content|striptags|truncatewords:15|safe }}</p>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
-
-            <!-- Navigation buttons -->
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div>
-        </div>
-
-        <div class="text-center mt-5" data-aos="fade-up">
-            <a href="{% url 'core:services' %}" class="btn btn-outline-dark px-4">Tüm Hizmetler</a>
         </div>
     </div>
-</section>
 
-<!-- Blog Bölümü -->
-<section class="section bg-white">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title fw-bold">Hukuk Blogu</h2>
-            <p class="lead text-muted">Güncel hukuki gelişmeler ve makaleler</p>
+    <!-- Quick Info Cards - Improved Layout -->
+    <div class="row g-3 g-lg-4 justify-content-center">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container mb-3">
+                        <i class="bi bi-geo-alt-fill text-primary fs-1"></i>
+                    </div>
+                    <h3 class="h5 mb-2">{% trans "Snåsa" %}</h3>
+                    <p class="text-muted mb-0">{% trans "Finnsåsvegen 126, 7760" %}</p>
+                </div>
+            </div>
         </div>
 
-        <div class="row g-4">
-            {% for post in recent_posts %}
-            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
-                <div class="card h-100 border-0 shadow-sm blog-card">
-                    <img src="{{ post.thumbnail.url }}" class="card-img-top lazyload" 
-                         alt="{{ post.title }}" loading="lazy"
-                         style="height: 200px; object-fit: cover;"
-                         width="400" height="200">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <span class="badge bg-dark me-2">{{ post.category }}</span>
-                            <small class="text-muted">{{ post.publish_date|date:"d F Y" }}</small>
-                        </div>
-                        <h5 class="fw-bold">{{ post.title }}</h5>
-                        <div class="tinymce-content">
-                            {{ post.summary|safe }}
-                        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container mb-3">
+                        <i class="bi bi-clock-fill text-primary fs-1"></i>
                     </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                        <a href="{% url 'core:blog_detail' post.slug %}" class="btn btn-link p-0">
-                            Devamını Oku <i class="fas fa-arrow-right ms-2"></i>
+                    <h3 class="h5 mb-2">{% trans "Åpningstider" %}</h3>
+                    <p class="text-muted mb-0">{% trans "Mandag - Fredag: 08:00 - 16:00" %}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container mb-3">
+                        <i class="bi bi-headset text-primary fs-1"></i>
+                    </div>
+                    <h3 class="h5 mb-3">{% trans "Kontakt oss" %}</h3>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary rounded-pill d-flex align-items-center justify-content-center gap-2 py-2"
+                                onclick="initiateCall('+4741195741')">
+                            <i class="bi bi-telephone-fill"></i>
+                            <span>{% trans "Ring oss" %}</span>
+                        </button>
+                        
+                        <a href="mailto:snaasa@heroeurope.com" 
+                           class="btn btn-outline-primary rounded-pill d-flex align-items-center justify-content-center gap-2 py-2">
+                            <i class="bi bi-envelope-fill"></i>
+                            <span>{% trans "Send e-post" %}</span>
                         </a>
                     </div>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-
-        <div class="text-center mt-5" data-aos="fade-up">
-            <a href="{% url 'core:blog' %}" class="btn btn-outline-dark px-4">Tüm Yazılar</a>
-        </div>
-    </div>
-</section>
-
-<!-- Özlü Söz Bölümü -->
-<section class="quote-section">
-    <div class="container">
-        <div class="quote-content">{{ site_owner.quote|safe }}</div>
-        {% if site_owner.quote_author %}
-        <div class="mt-0 fw-bold text-light">- {{ site_owner.quote_author }}</div>
-        {% endif %}
-    </div>
-</section>  
-
-<!-- İletişim Bölümü -->
-<section id="contact" class="section bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title fw-bold">İletişim</h2>
-            <p class="lead text-muted">Bizimle iletişime geçin</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-5" data-aos="fade-right">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h4 class="fw-bold mb-4">İletişim Bilgileri</h4>
-
-                        <div class="d-flex mb-4">
-                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
-                                style="width: 40px; height: 40px;">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-2">Adres</h5>
-                                <p class="mb-0">{{ contact_info.address|linebreaksbr }}</p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex mb-4">
-                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
-                                style="width: 40px; height: 40px;">
-                                <i class="fas fa-phone-alt"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-2">Telefon</h5>
-                                <p class="mb-0"><a href="tel:{{ contact_info.phone }}"
-                                        class="text-decoration-none text-dark">{{ contact_info.phone }}</a></p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex mb-4">
-                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
-                                style="width: 40px; height: 40px;">
-                                <i class="fas fa-envelope"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-2">E-posta</h5>
-                                <p class="mb-0"><a href="mailto:{{ contact_info.email }}"
-                                        class="text-decoration-none text-dark">{{ contact_info.email }}</a></p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex">
-                            <div class="icon-box bg-dark bg-opacity-10 text-white me-3 rounded-circle d-flex align-items-center justify-content-center"
-                                style="width: 40px; height: 40px;">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-2">Çalışma Saatleri</h5>
-                                <p class="mb-0">{{ contact_info.working_hours|linebreaksbr }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-7" data-aos="fade-left">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <h4 class="fw-bold mb-4">Danışmanlık Talebi</h4>
-                        <form method="post" action="{% url 'core:contact' %}" class="contact-form">
-                            {% csrf_token %}
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="name" class="form-label">Adınız Soyadınız</label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="email" class="form-label">E-posta Adresiniz</label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                </div>
-                                <div class="col-12">
-                                    <label for="subject" class="form-label">Konu</label>
-                                    <input type="text" class="form-control" id="subject" name="subject" required>
-                                </div>
-                                <div class="col-12">
-                                    <label for="message" class="form-label">Mesajınız</label>
-                                    <textarea class="form-control" id="message" name="message" rows="4"
-                                        required></textarea>
-                                </div>
-                                <div class="col-12 mt-4">
-                                    <button type="submit" class="btn btn-dark w-100 py-3">Gönder</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Map Section -->
-<div class="section pt-0">
-    <div class="container">
-        <div class="map-section" data-aos="fade-up">
-            <iframe src="{{ contact_info.map_embed_url }}" width="100%" height="100%" style="border:0;"
-                allowfullscreen="" loading="lazy" title="Harita"></iframe>
         </div>
     </div>
 </div>
+
+<!-- Call Modal -->
+<div class="modal fade" id="callModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <div class="mb-4">
+                    <i class="bi bi-telephone-outbound-fill text-primary" style="font-size: 2.5rem;"></i>
+                </div>
+                <h5 class="mb-3 fw-semibold">{% trans "Vil du ringe Snåsa Mottak?" %}</h5>
+                <p class="text-muted mb-4">{% trans "Vi er tilgjengelig mandag-fredag mellom 08:00-16:00" %}</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
+                            data-bs-dismiss="modal">
+                        {% trans "Avbryt" %}
+                    </button>
+                    <a id="callButton" href="#"
+                       class="btn btn-primary px-4 rounded-pill d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone-fill"></i>
+                        {% trans "Ring nå" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function initiateCall(phoneNumber) {
+        document.getElementById('callButton').href = "tel:" + phoneNumber;
+        const callModal = new bootstrap.Modal(document.getElementById('callModal'));
+        callModal.show();
+        
+        setTimeout(() => {
+            callModal.hide();
+        }, 30000);
+    }
+</script>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Preload critical JS resources -->
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js" as="script">
-<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.js" as="script">
 
-<!-- Load lazysizes for lazy loading -->
-<script src="{% static 'js/lazysizes.min.js' %}" async></script>
-
-<!-- Defer non-critical JS -->
-<script>
-// Minimal JavaScript to handle critical functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Load non-critical JS after page is interactive
-    function loadDeferredResources() {
-        const swiperScript = document.createElement('script');
-        swiperScript.src = 'https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js';
-        swiperScript.onload = initSwiper;
-        document.body.appendChild(swiperScript);
-        
-        const aosScript = document.createElement('script');
-        aosScript.src = 'https://unpkg.com/aos@2.3.1/dist/aos.js';
-        aosScript.onload = initAOS;
-        document.body.appendChild(aosScript);
-    }
-    
-    // Initialize Swiper when loaded
-    function initSwiper() {
-        const serviceSwiper = new Swiper('.service-swiper', {
-            slidesPerView: 1,
-            spaceBetween: 30,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            breakpoints: {
-                768: {
-                    slidesPerView: 2,
-                    spaceBetween: 20
-                },
-                1024: {
-                    slidesPerView: 3,
-                    spaceBetween: 30
-                }
-            }
-        });
-    }
-    
-    // Initialize AOS when loaded
-    function initAOS() {
-        AOS.init({
-            duration: 800,
-            easing: 'ease-in-out',
-            once: true,
-            offset: 100
-        });
-    }
-    
-    // Navigation functionality
-    function handleNavigation() {
-        const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
-        
-        function setActiveNavItem() {
-            const scrollPosition = window.pageYOffset + 100;
-            
-            document.querySelectorAll('section, .map-section').forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                
-                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                    const id = section.getAttribute('id');
-                    
-                    mobileNavItems.forEach(item => {
-                        item.classList.remove('active');
-                        if (item.getAttribute('href').includes(id)) {
-                            item.classList.add('active');
-                        }
-                    });
-                }
-            });
-        }
-        
-        window.addEventListener('scroll', setActiveNavItem);
-        setActiveNavItem();
-        
-        mobileNavItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                if (this.getAttribute('href').startsWith('#')) {
-                    e.preventDefault();
-                    const targetElement = document.querySelector(this.getAttribute('href'));
-                    if (targetElement) {
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
-            });
-        });
-    }
-    
-    // Check if browser supports IntersectionObserver for more efficient loading
-    if ('IntersectionObserver' in window) {
-        // Load deferred resources when page is idle
-        if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(loadDeferredResources);
-        } else {
-            // Fallback for browsers without requestIdleCallback
-            setTimeout(loadDeferredResources, 2000);
-        }
-    } else {
-        // Fallback for older browsers
-        loadDeferredResources();
-    }
-    
-    // Initialize navigation
-    handleNavigation();
-});
-</script>
 {% endblock %}

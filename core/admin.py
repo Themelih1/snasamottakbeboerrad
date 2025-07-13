@@ -1,289 +1,160 @@
 from django.contrib import admin
+from django.http import HttpResponse
 from django import forms
 from django.utils.html import format_html
 from django.urls import reverse
-from django.utils.safestring import mark_safe
-from .models import *
+from tinymce.widgets import TinyMCE
+from import_export.admin import ExportActionMixin
+from import_export import resources
+from .models import Activity, BlogPost, ParticipationRequest, SiteSettings
+import openpyxl
+from openpyxl.writer.excel import save_virtual_workbook
+from django.db.models import Count, Q
 
-class BaseAdmin(admin.ModelAdmin):
-    list_per_page = 25
-    save_on_top = True
-
-@admin.register(SiteOwner)
-class SiteOwnerAdmin(BaseAdmin):
-    fieldsets = (
-        ('Temel Bilgiler', {
-            'fields': ('name', 'position', 'image','about_image', 'short_bio')
-        }),
-        ('Detaylı Bilgiler', {
-            'fields': ('bio', 'quote', 'quote_author')
-        }),
-    )
-    list_display = ('name', 'position', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />', obj.image.url)
-        return "-"
-    image_preview.short_description = "Profil Görseli"
-
-class ServiceForm(forms.ModelForm):
+class ParticipationRequestResource(resources.ModelResource):
     class Meta:
-        model = Service
-        fields = '__all__'
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-        }
+        model = ParticipationRequest
+        fields = ('activity__title', 'first_name', 'last_name', 'room_number', 'email', 'phone', 'special_needs', 'created_at')
+        export_order = fields
 
-@admin.register(Service)
-class ServiceAdmin(BaseAdmin):
-    form = ServiceForm
-    list_display = ('title', 'icon_display', 'is_featured', 'order', 'created_at')
-    list_editable = ('is_featured', 'order')
-    list_filter = ('is_featured', 'created_at')
-    search_fields = ('title', 'description')
+##@admin.register(ParticipationRequest)
+class ParticipationRequestAdmin(ExportActionMixin, admin.ModelAdmin):
+    # Ana liste görünümü ayarları
+    list_display = ('activity_link', 'participant_info', 'status_badge', 'created_at')
+    list_filter = ('is_approved', 'activity', 'created_at')
+    search_fields = ('first_name', 'last_name', 'room_number', 'activity__title')
+    list_select_related = ('activity',)
+    actions = ['approve_selected', 'export_to_excel']
+    
+    # Özel alanlar
+    def activity_link(self, obj):
+        return format_html(
+            '<a href="{}?activity__id__exact={}">{}</a>',
+            reverse('admin:core_participationrequest_changelist'),
+            obj.activity.id,
+            obj.activity.title
+        )
+    activity_link.short_description = 'Aktivite'
+    activity_link.admin_order_field = 'activity__title'
+
+    def participant_info(self, obj):
+        return format_html(
+            '<strong>{} {}</strong><br>'
+            '<small>Rom: {} | Tel: {}</small>',
+            obj.first_name, obj.last_name,
+            obj.room_number, obj.phone or '-'
+        )
+    participant_info.short_description = 'Katılımcı Bilgisi'
+
+    def status_badge(self, obj):
+        color = 'green' if obj.is_approved else 'orange'
+        text = 'Onaylandı' if obj.is_approved else 'Bekliyor'
+        return format_html(
+            '<span style="background:{}; color:white; padding:2px 6px; border-radius:10px;">{}</span>',
+            color, text
+        )
+    status_badge.short_description = 'Durum'
+
+    # Gruplandırılmış görünüm
+    change_list_template = 'core/admin/participation_requests_changelist.html'
+    
+    def changelist_view(self, request, extra_context=None):
+        if extra_context is None:
+            extra_context = {}
+
+        activities = Activity.objects.annotate(
+            total_requests=Count('participationrequest'),
+            approved_requests=Count('participationrequest', filter=Q(participationrequest__is_approved=True)),
+            pending_requests=Count('participationrequest', filter=Q(participationrequest__is_approved=False))
+        ).order_by('-date')
+
+        extra_context.update({
+        '   activities': activities,
+            'total_requests': ParticipationRequest.objects.count(),
+            'approved_requests': ParticipationRequest.objects.filter(is_approved=True).count(),
+    })
+
+        response = super().changelist_view(request, extra_context=extra_context)
+
+    # Eğer response context dict ise (TemplateResponse gibi) içeriğine extra_context ekle
+        if hasattr(response, 'context_data'):
+            response.context_data.update(extra_context)
+
+        return response
+    # Action'lar
+    def approve_selected(self, request, queryset):
+        updated = queryset.update(is_approved=True)
+        self.message_user(request, f"{updated} katılımcı onaylandı.")
+    approve_selected.short_description = "Seçilenleri onayla"
+
+    def export_to_excel(self, request, queryset):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Deltakere"
+        
+        headers = [
+            'Aktivitet', 'Fornavn', 'Etternavn', 'Romnummer', 
+            'E-post', 'Telefon', 'Spesielle behov', 'Godkjent', 'Registrert'
+        ]
+        ws.append(headers)
+        
+        for obj in queryset:
+            ws.append([
+                obj.activity.title,
+                obj.first_name,
+                obj.last_name,
+                obj.room_number,
+                obj.email or '',
+                obj.phone or '',
+                obj.special_needs or '',
+                'Ja' if obj.is_approved else 'Nei',
+                obj.created_at.strftime('%Y-%m-%d %H:%M')
+            ])
+        
+        response = HttpResponse(
+            save_virtual_workbook(wb),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=deltakere.xlsx'
+        return response
+    export_to_excel.short_description = "Eksporter valgte til Excel"
+
+  
+##@admin.register(Activity)
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date', 'location')
+    list_filter = ('date',)
+    search_fields = ('title', 'description', 'location')
     prepopulated_fields = {'slug': ('title',)}
-    
-    fieldsets = (
-        ('Temel Bilgiler', {
-            'fields': ('title', 'slug', 'icon', 'excerpt', 'description', 'is_featured', 'order')
-        }),
-        ('Detaylı İçerik', {
-            'fields': ('detailed_content', 'cover_image', 'cover_image_preview')
-        }),
-    )
-    readonly_fields = ('cover_image_preview', 'created_at')
+    date_hierarchy = 'date'
 
-    def icon_display(self, obj):
-        return format_html('<i class="{}"></i> {}', obj.icon, obj.get_icon_display())
-    icon_display.short_description = "İkon"
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['description'].widget = TinyMCE()
+        return form
 
-    def cover_image_preview(self, obj):
-        if obj.cover_image:
-            return format_html('<img src="{}" style="max-height: 200px;" />', obj.cover_image.url)
-        return "-"
-    cover_image_preview.short_description = "Kapak Görseli Önizleme"
 
-class TeamMemberForm(forms.ModelForm):
-    class Meta:
-        model = TeamMember
-        fields = '__all__'
-        widgets = {
-            'expertise_list': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Uzmanlık alanlarını virgülle ayırarak girin'}),
-        }
-
-@admin.register(TeamMember)
-class TeamMemberAdmin(BaseAdmin):
-    form = TeamMemberForm
-    list_display = ('name', 'position', 'expertise', 'is_active', 'image_preview')
-    list_editable = ('is_active',)
-    list_filter = ('is_active', 'position')
-    search_fields = ('name', 'expertise', 'position')
-    prepopulated_fields = {}
-    
-    fieldsets = (
-        ('Temel Bilgiler', {
-            'fields': (
-                'name', 'slug',
-                'position', 'expertise', 'expertise_list',
-                'image', 'image_preview', 'cover_image', 'cover_image_preview', 'is_active'
-            )
-        }),
-        ('İletişim Bilgileri', {
-            'fields': ('phone', 'email')
-        }),
-        ('Detaylı Bilgiler', {
-            'fields': ('bio', 'education', 'experience')
-        }),
-    )
-    
-    readonly_fields = ('image_preview', 'cover_image_preview')
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:  # Düzenleme modunda slug readonly olsun
-            return self.readonly_fields + ('slug',)
-        return self.readonly_fields
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="max-height: 100px;" />', obj.image.url)
-        return "-"
-    image_preview.short_description = "Profil Görseli"
-
-    def cover_image_preview(self, obj):
-        if obj.cover_image:
-            return format_html('<img src="{}" style="max-height: 200px;" />', obj.cover_image.url)
-        return "-"
-    cover_image_preview.short_description = "Kapak Görseli"
-
-class BlogPostForm(forms.ModelForm):
-    slug = forms.SlugField(
-        required=False,
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Otomatik oluşturulacak',
-            'readonly': True
-        })
-    )
-    class Meta:
-        model = BlogPost
-        fields = '__all__'
-        widgets = {
-            'summary': forms.Textarea(attrs={'rows': 3}),
-        }
-
-class BlogCategoryAdmin(BaseAdmin):
-    list_display = ('name', 'slug', 'post_count')
-    prepopulated_fields = {"slug": ("name",)}
-    fields = ['name', 'slug']
-
-    def post_count(self, obj):
-        return obj.blogpost_set.count()
-    post_count.short_description = "Yazı Sayısı"
-
-class BlogTagAdmin(BaseAdmin):
-    list_display = ('name', 'slug', 'post_count')
-    prepopulated_fields = {'slug': ('name',)}
-
-    def post_count(self, obj):
-        return obj.blogpost_set.count()
-    post_count.short_description = "Yazı Sayısı"
-
-class BlogPostAdmin(BaseAdmin):
-    form = BlogPostForm
-    list_display = ('title', 'category', 'is_published', 'is_featured', 'publish_date', 'thumbnail_preview')
-    list_editable = ('is_published', 'is_featured')
-    list_filter = ('is_published', 'is_featured', 'category', 'tags', 'publish_date')
-    search_fields = ('title', 'summary', 'content')
-    filter_horizontal = ('tags',)
-    date_hierarchy = 'publish_date'
-    
-    fieldsets = (
-        ('Temel Bilgiler', {
-            'fields': ('title', 'slug', 'category', 'tags', 'is_published', 'is_featured', 'publish_date')
-        }),
-        ('İçerik', {
-            'fields': ('summary', 'content')
-        }),
-        ('Görseller', {
-            'fields': ('thumbnail', 'thumbnail_preview', 'cover_image', 'cover_image_preview')
-        }),
-    )
-    readonly_fields = ('publish_date', 'thumbnail_preview', 'cover_image_preview')
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if obj:  # Düzenleme modunda
-            return readonly_fields + ('slug',)
-        return readonly_fields
-    
-    def thumbnail_preview(self, obj):
-        if obj.thumbnail:
-            return format_html('<img src="{}" style="max-height: 100px;" />', obj.thumbnail.url)
-        return "-"
-    thumbnail_preview.short_description = "Küçük Görsel"
-
-    def cover_image_preview(self, obj):
-        if obj.cover_image:
-            return format_html('<img src="{}" style="max-height: 200px;" />', obj.cover_image.url)
-        return "-"
-    cover_image_preview.short_description = "Kapak Görseli"
-    
-class BlogCommentAdmin(BaseAdmin):
-    list_display = ('name', 'post_link', 'email', 'is_approved', 'created_at')
-    list_editable = ('is_approved',)
-    list_filter = ('is_approved', 'post', 'created_at')
-    search_fields = ('name', 'email', 'content')
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'section', 'get_category_display', 'created_at', 'is_published', 'is_pinned', 'is_important')
+    list_filter = ('section', 'category', 'is_published', 'is_pinned', 'is_important', 'created_at')
+    search_fields = ('title', 'content')
+    prepopulated_fields = {'slug': ('title',)}
     date_hierarchy = 'created_at'
-    readonly_fields = ('created_at', 'post_link')
-
-    def post_link(self, obj):
-        url = reverse('admin:core_blogpost_change', args=[obj.post.id])
-        return format_html('<a href="{}">{}</a>', url, obj.post.title)
-    post_link.short_description = "Yazı"
-
-class ContactInfoAdmin(BaseAdmin):
-    list_display = ('phone', 'email', 'address_short')
+    list_editable = ('is_pinned', 'is_important')
+    
     fieldsets = (
-        ('İletişim Bilgileri', {
-            'fields': ('phone', 'email', 'address', 'working_hours')
+        (None, {
+            'fields': ('title', 'slug', 'content', 'image', 'section', 'category')
         }),
-        ('Harita Ayarları', {
-            'fields': ('map_embed_url',)
+        ('Ayarlar', {
+            'fields': ('is_published', 'is_pinned', 'is_important'),
         }),
     )
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['content'].widget = TinyMCE()
+        return form
 
-    def address_short(self, obj):
-        return obj.address[:50] + '...' if len(obj.address) > 50 else obj.address
-    address_short.short_description = "Adres"
-
-    def has_add_permission(self, request):
-        return not ContactInfo.objects.exists()
-
-class KVKKContentAdmin(BaseAdmin):
-    list_display = ('title', 'content_short')
-    fieldsets = (
-        ('KVKK İçeriği', {
-            'fields': ('title', 'content')
-        }),
-    )
-
-    def content_short(self, obj):
-        return obj.content[:100] + '...' if len(obj.content) > 100 else obj.content
-    content_short.short_description = "İçerik"
-
-    def has_add_permission(self, request):
-        return not KVKKContent.objects.exists()
-
-class ContactMessageAdmin(BaseAdmin):
-    list_display = ('name', 'email', 'subject', 'is_read', 'created_at')
-    list_editable = ('is_read',)
-    list_filter = ('is_read', 'created_at')
-    search_fields = ('name', 'email', 'subject', 'message')
-    date_hierarchy = 'created_at'
-    readonly_fields = ('created_at', 'name', 'email', 'phone', 'subject', 'message')
-    fieldsets = (
-        ('Mesaj Bilgileri', {
-            'fields': ('name', 'email', 'phone', 'subject', 'message', 'created_at')
-        }),
-        ('Durum', {
-            'fields': ('is_read',)
-        }),
-    )
-
-    def has_add_permission(self, request):
-        return False
-
-@admin.register(ServiceProcess)
-class ServiceProcessAdmin(BaseAdmin):
-    list_display = ('title', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="max-height: 200px;" />', obj.image.url)
-        return "-"
-    image_preview.short_description = "Görsel Önizleme"
-
-@admin.register(TeamAbout)
-class TeamAboutAdmin(BaseAdmin):
-    list_display = ('title', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="max-height: 200px;" />', obj.image.url)
-        return "-"
-    image_preview.short_description = "Görsel Önizleme"
-
-admin.site.site_header = "Tuglacı Hukuk Danışmanlığı Yönetim Paneli"
-admin.site.site_title = "Hukuk Danışmanlığı"
-admin.site.index_title = "Site Yönetimi"
-
-admin.site.register(BlogCategory, BlogCategoryAdmin)
-admin.site.register(BlogTag, BlogTagAdmin)
-admin.site.register(BlogPost, BlogPostAdmin)
-admin.site.register(BlogComment, BlogCommentAdmin)
-admin.site.register(ContactInfo, ContactInfoAdmin)
-admin.site.register(KVKKContent, KVKKContentAdmin)
-admin.site.register(ContactMessage, ContactMessageAdmin)
+admin.site.register(SiteSettings)

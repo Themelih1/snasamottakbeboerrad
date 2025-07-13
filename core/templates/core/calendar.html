@@ -1,0 +1,229 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Kalender" %}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+<link href="{% static 'css/calendar.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container py-3 py-md-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">{% trans "Kalender" %}</h1>
+    </div>
+
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body p-2 p-md-3 position-relative">
+            <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div class="modal fade event-modal" id="eventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="event-detail-icon"><i class="far fa-clock"></i></div>
+                        <div>
+                            <strong>{% trans "Tid:" %}</strong>
+                            <div id="eventTime" class="text-muted"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start mb-3" id="eventLocationContainer">
+                        <div class="event-detail-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <strong>{% trans "Sted:" %}</strong>
+                            <div id="eventLocation" class="text-muted"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start" id="eventDescriptionContainer">
+                        <div class="event-detail-icon"><i class="far fa-file-alt"></i></div>
+                        <div>
+                            <strong>{% trans "Beskrivelse:" %}</strong>
+                            <div id="eventDescription" class="text-muted"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans "Lukk" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/nb.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize calendar
+    const calendarEl = document.getElementById('calendar');
+    const events = [
+        {% for event in events %}
+        {
+            id: '{{ event.id|escapejs }}',
+            title: '{{ event.summary|escapejs }}',
+            start: '{{ event.start|escapejs }}',
+            end: '{{ event.end|escapejs }}',
+            description: '{{ event.description|escapejs }}',
+            location: '{{ event.location|escapejs }}',
+            color: '#{{ event.color|default:"3788d8" }}',
+            {% if event.past %}classNames: ['fc-event-past']{% endif %}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    // Check if there are any weekend events
+    const hasWeekendEvents = events.some(event => {
+        if (!event.start) return false;
+        const date = new Date(event.start);
+        return date.getDay() === 0 || date.getDay() === 6; // 0 = Sunday, 6 = Saturday
+    });
+    
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'nb',
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,timeGridDay,listWeek'
+        },
+        firstDay: 1, // Monday as first day
+        slotMinTime: '08:00:00',
+        slotMaxTime: '18:00:00',
+        allDaySlot: false,
+        nowIndicator: true,
+        navLinks: true,
+        dayMaxEvents: true,
+        eventDisplay: 'block',
+        height: 'auto',
+        stickyHeaderDates: true, // Başlıkların sabit kalmasını sağlar
+        events: events,
+        eventClick: function(info) {
+            showEventModal(info.event);
+        },
+        loading: function(isLoading) {
+            document.getElementById('loadingSpinner').style.display = isLoading ? 'flex' : 'none';
+        },
+        // Custom day header content to show day names
+        dayHeaderContent: function(arg) {
+            const dayNumber = arg.date.getDate();
+            const dayName = arg.date.toLocaleDateString('nb-NO', { weekday: 'short' });
+            return { html: `<div class="fc-day-name">${dayName}</div><div class="fc-day-number">${dayNumber}</div>` };
+        }
+    });
+    
+    // Initially hide weekends
+    calendarEl.classList.add('hide-weekends');
+    calendar.render();
+    
+    // Add weekend toggle button to header
+    const headerToolbar = calendarEl.closest('.card-body').querySelector('.fc-header-toolbar');
+    if (headerToolbar) {
+        const rightToolbar = headerToolbar.querySelector('.fc-toolbar-chunk:last-child');
+        if (rightToolbar) {
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'fc-button weekend-toggle';
+            toggleButton.innerHTML = `
+                <i class="fas fa-calendar-week"></i>
+                ${hasWeekendEvents ? '<span class="weekend-badge">!</span>' : ''}
+            `;
+            toggleButton.title = '{% trans "Hafta sonunu göster/gizle" %}';
+            toggleButton.addEventListener('click', function() {
+                calendarEl.classList.toggle('hide-weekends');
+                calendar.updateSize();
+                // Update button icon
+                const icon = this.querySelector('i');
+                if (calendarEl.classList.contains('hide-weekends')) {
+                    icon.classList.remove('fa-calendar-alt');
+                    icon.classList.add('fa-calendar-week');
+                } else {
+                    icon.classList.remove('fa-calendar-week');
+                    icon.classList.add('fa-calendar-alt');
+                }
+            });
+            rightToolbar.prepend(toggleButton);
+        }
+    }
+    
+    // Event modal
+    const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+    
+    function showEventModal(event) {
+        document.getElementById('eventModalTitle').textContent = event.title;
+        document.getElementById('eventTime').innerHTML = formatEventTime(event.start, event.end);
+        
+        // Location
+        const locationContainer = document.getElementById('eventLocationContainer');
+        const location = event.extendedProps?.location;
+        if (location) {
+            document.getElementById('eventLocation').textContent = location;
+            locationContainer.style.display = 'flex';
+        } else {
+            locationContainer.style.display = 'none';
+        }
+        
+        // Description
+        const descContainer = document.getElementById('eventDescriptionContainer');
+        const description = event.extendedProps?.description;
+        if (description) {
+            document.getElementById('eventDescription').innerHTML = description.replace(/\n/g, '<br>');
+            descContainer.style.display = 'flex';
+        } else {
+            descContainer.style.display = 'none';
+        }
+        
+        eventModal.show();
+    }
+    
+    function formatEventTime(start, end) {
+        if (!start) return '';
+        
+        const options = { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        };
+        
+        let timeText = start.toLocaleDateString('nb-NO', options);
+        
+        if (end) {
+            if (start.toDateString() === end.toDateString()) {
+                // Same day
+                timeText += ' - ' + end.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+            } else {
+                // Different days
+                timeText += ' - ' + end.toLocaleDateString('nb-NO', options);
+            }
+        }
+        
+        return timeText;
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        calendar.updateSize();
+    });
+});
+</script>
+{% endblock %}

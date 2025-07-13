@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}Bekreftet{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <i class="fas fa-check-circle text-success mb-4" style="font-size: 4rem;"></i>
+    <h2 class="h3 mb-3">{% trans "Deltakelse bekreftet" %} ✅</h2>
+    <p class="lead">
+        {% trans "Navn:" %} <strong>{{ participation.first_name }} {{ participation.last_name }}</strong><br>
+        {% trans "Romnummer:" %} <strong>{{ participation.room_number }}</strong><br>
+        {% trans "Aktivitet:" %} <strong>{{ participation.activity.title }}</strong>
+    </p>
+</div>
+{% endblock %}

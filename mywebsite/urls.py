@@ -2,15 +2,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from core import views
+from django.conf.urls.i18n import i18n_patterns
 
 urlpatterns = [
-    path('egemen/', admin.site.urls),
-    path('', include('core.urls')),           # core uygulamasını dahil et
+    path('snasa/', admin.site.urls),
     path('tinymce/', include('tinymce.urls')),
-    path('captcha/', include('captcha.urls')),
-
 ]
 
+urlpatterns += i18n_patterns(
+    path('', include('core.urls')),
+)
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

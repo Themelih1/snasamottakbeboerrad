@@ -1,0 +1,282 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Kunngjøringer" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/blogpostlist.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}
+
+{% block content %}
+<div class="announcement-minimal-container">
+    <!-- Header with Filter Button -->
+    <div class="announcement-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center py-3">
+                <h1 class="announcement-title">
+                    <i class="bi bi-megaphone"></i> {% trans "Kunngjøringer" %}
+                </h1>
+                <button class="filter-toggle-btn" onclick="toggleFilterPanel()">
+                    <i class="bi bi-funnel"></i> {% trans "Filtrer" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Panel (Hidden by default) -->
+    <div class="filter-panel" id="filterPanel">
+        <div class="container py-3">
+            <div class="row g-2">
+                <div class="col-12">
+                    <select class="form-select filter-select" onchange="applyFilters()" id="sectionFilter">
+                        <option value="">{% trans "Alle seksjoner" %}</option>
+                        {% for value, name in sections %}
+                        <option value="{{ value }}" {% if selected_section == value %}selected{% endif %}>{{ name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <select class="form-select filter-select" onchange="applyFilters()" id="categoryFilter">
+                        <option value="">{% trans "Alle kategorier" %}</option>
+                        {% for value, name in categories %}
+                        <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>
+                            {{ name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <select class="form-select filter-select" onchange="applyFilters()" id="specialFilter">
+                        <option value="">{% trans "Alle kunngjøringer" %}</option>
+                        <option value="important" {% if request.GET.filter == 'important' %}selected{% endif %}>
+                            {% trans "Viktige kunngjøringer" %}
+                        </option>
+                        <option value="pinned" {% if request.GET.filter == 'pinned' %}selected{% endif %}>
+                            {% trans "Festede" %}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise"></i> {% trans "Tilbakestill filtre" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modern Quick Access Navigation -->
+    <div class="quick-access-modern">
+        <div class="container">
+            <div class="quick-access-inner">
+                <a href="?section=EDUCATION" class="quick-access-card education">
+                    <div class="quick-access-icon">
+                        <i class="bi bi-journal-bookmark"></i>
+                    </div>
+                    <div class="quick-access-text">
+                        <span>{% trans " Module Utdanning" %}</span>
+                        <small>{% trans "Undervisningsinnhold" %}</small>
+                    </div>
+                </a>
+                <a href="?section=GUIDE" class="quick-access-card guide">
+                    <div class="quick-access-icon">
+                        <i class="bi bi-signpost-2"></i>
+                    </div>
+                    <div class="quick-access-text">
+                        <span>{% trans "Veiledning" %}</span>
+                        <small>{% trans "Hjelpedokumenter" %}</small>
+                    </div>
+                    <div class="quick-access-indicator"></div>
+                </a>
+                <a href="?section=ANNOUNCEMENT" class="quick-access-card announcement">
+                    <div class="quick-access-icon">
+                        <i class="bi bi-pin-angle"></i>
+                    </div>
+                    <div class="quick-access-text">
+                        <span>{% trans "Kunngjøring" %}</span>
+                        <small>{% trans "Viktig informasjon" %}</small>
+                    </div>
+                    <div class="quick-access-indicator"></div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module Calendar (if exists) -->
+    {% if active_calendar %}
+    <div class="module-calendar-mini">
+        <div class="container py-2">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="fw-bold text-muted">
+                            <i class="bi bi-calendar-week"></i> {% trans "Denne uken" %}
+                        </small>
+                        <small class="text-muted">{{ active_calendar.week_range }}</small>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        {% for day, modules in active_calendar.get_week_schedule.items %}
+                        <div class="day-pill {% if day.today %}today{% endif %}">
+                            <small class="d-block">{{ day.date|date:"D"|slice:":3" }}</small>
+                            <small class="d-block">{{ day.date|date:"d.m" }}</small>
+                            {% for module in modules|slice:":1" %}
+                            <span class="badge bg-module">{{ module.name|slice:":3" }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="announcement-main-content">
+        <div class="container py-3">
+            {% if posts %}
+            <div class="announcement-list">
+                {% for post in posts %}
+                <div class="announcement-item">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-section">{{ post.get_section_display }}</span>
+                                {% if post.is_important %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                </span>
+                                {% endif %}
+                            </div>
+                            <h3 class="announcement-item-title">
+                                <a href="{% url 'core:blog_detail' post.pk %}">{{ post.title }}</a>
+                            </h3>
+                            <p class="announcement-item-excerpt">{{ post.content|striptags|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> {{ post.created_at|date:"d.m.Y" }}
+                                </small>
+                                <a href="{% url 'core:blog_detail' post.pk %}" class="read-more-link">
+                                    {% trans "Detaljer" %} <i class="bi bi-arrow-right-short"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% if post.image %}
+                        <div class="ms-3 announcement-thumbnail">
+                            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state text-center py-4">
+                <i class="bi bi-megaphone fs-4 text-muted mb-2"></i>
+                <p class="text-muted mb-0">{% trans "Ingen kunngjøringer å vise" %}</p>
+                <button class="btn btn-sm btn-link mt-2" onclick="resetFilters()">
+                    {% trans "Tilbakestill filtre" %}
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center pagination-sm">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?{% if selected_section %}section={{ selected_section }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if request.GET.filter %}filter={{ request.GET.filter }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %} <li class="page-item">
+                        <a class="page-link"
+                            href="?{% if selected_section %}section={{ selected_section }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if request.GET.filter %}filter={{ request.GET.filter }}&{% endif %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?{% if selected_section %}section={{ selected_section }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if request.GET.filter %}filter={{ request.GET.filter }}&{% endif %}page={{ page_obj.next_page_number }}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+    // Toggle filter panel visibility
+    function toggleFilterPanel() {
+        const panel = document.getElementById('filterPanel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Apply filters when dropdowns change
+    function applyFilters() {
+        const section = document.getElementById('sectionFilter').value;
+        const category = document.getElementById('categoryFilter').value;
+        const special = document.getElementById('specialFilter').value;
+
+        const params = new URLSearchParams();
+
+        if (section) params.set('section', section);
+        if (category) params.set('category', category);
+        if (special) params.set('filter', special);
+
+        window.location.href = `${window.location.pathname}?${params.toString()}`;
+    }
+
+    // Reset all filters
+    function resetFilters() {
+        window.location.href = window.location.pathname;
+    }
+
+    // Close filter panel when clicking outside
+    document.addEventListener('click', function (event) {
+        const filterPanel = document.getElementById('filterPanel');
+        const filterButton = document.querySelector('.filter-toggle-btn');
+
+        if (!filterPanel.contains(event.target) && !filterButton.contains(event.target)) {
+            filterPanel.style.display = 'none';
+        }
+    });
+
+    // Mobile bottom nav active state
+    function setActiveQuickLink() {
+        const currentSection = new URLSearchParams(window.location.search).get('section');
+        document.querySelectorAll('.quick-access-card').forEach(card => {
+            const cardSection = card.href.includes('section=') ?
+                card.href.split('section=')[1].split('&')[0] : null;
+
+            card.classList.toggle('active',
+                (!currentSection && card.classList.contains('announcement')) ||
+                (currentSection && cardSection === currentSection)
+            );
+        });
+    }
+    // Call on load and when URL changes
+    document.addEventListener('DOMContentLoaded', setActiveQuickLink);
+    window.addEventListener('popstate', setActiveQuickLink);
+</script>

@@ -1,0 +1,98 @@
+{% extends "admin/change_list.html" %}
+{% load custom_filters %}
+
+
+{% block content %}
+<div class="module">
+    <div class="dashboard">
+        <!-- Genel İstatistikler -->
+        <div class="stats-panel">
+            <div class="stat-card">
+                <h3>Toplam Talep</h3>
+                <span class="count">{{ total_requests }}</span>
+            </div>
+            <div class="stat-card approved">
+                <h3>Onaylanan</h3>
+                <span class="count">{{ approved_requests }}</span>
+            </div>
+            <div class="stat-card pending">
+                <h3>Bekleyen</h3>
+                <span class="count">{{ total_requests|subtract:approved_requests }}</span>
+            </div>
+        </div>
+
+        <!-- Aktivite Grupları -->
+        <h2>Aktivite Bazında Talepler</h2>
+        <div class="activity-grid">
+            {% for activity in activities %}
+            <div class="activity-card">
+                <div class="activity-header">
+                    <h3>{{ activity.title }}</h3>
+                    <small>{{ activity.date|date:"d.m.Y H:i" }}</small>
+                </div>
+                <div class="activity-stats">
+                    <span class="total">{{ activity.total_requests }} Talep</span>
+                    <span class="approved">{{ activity.approved_requests }} Onaylı</span>
+                    <span class="pending">{{ activity.pending_requests }} Bekleyen</span>
+                </div>
+                <div class="activity-actions">
+                    <a href="?activity__id__exact={{ activity.id }}" class="button">
+                        Tümünü Görüntüle
+                    </a>
+                    <a href="?activity__id__exact={{ activity.id }}&is_approved__exact=1" class="button approved">
+                        Onaylılar
+                    </a>
+                    <a href="?activity__id__exact={{ activity.id }}&is_approved__exact=0" class="button pending">
+                        Bekleyenler
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Özel stil tanımları */
+    .dashboard {
+        margin-bottom: 30px;
+    }
+    .stats-panel {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        flex: 1;
+        padding: 15px;
+        background: #000000;
+        border-radius: 4px;
+    }
+    .stat-card.approved { background: #009e0d; }
+    .stat-card.pending { background: #002fff; }
+    .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 15px;
+    }
+    .activity-card {
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    .activity-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+    }
+    .activity-actions .button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}

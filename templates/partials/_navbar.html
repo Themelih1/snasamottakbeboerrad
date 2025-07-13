@@ -1,105 +1,140 @@
 {% load static %}
-{% load compress %}
-<!-- Navbar CSS -->
- {% block extra_css %}
+{% load i18n %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-{% compress css %}
-<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
-{% endcompress %}
-{% endblock %}
+<!DOCTYPE html>
+<html lang="no">
 
-<!-- Navbar CSS End -->
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mottak</title>
 
-<!-- Navbar HTML -->
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'core:home' %}">
-            <img src="{% static 'images/logo-dark.png' %}" alt="Logo" class="dark-logo">
-            <img src="{% static 'images/logo-light.png' %}" alt="Logo" class="light-logo">
-            <span class="brand-text"></span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}#about">Hakkımda</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'core:services' %}">Hizmetler</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'core:team' %}">Ekibimiz</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'core:blog' %}">Blog</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'core:contact' %}">İletişim</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-<!-- Mobile Bottom Navbar HTML -->
-<div class="mobile-bottom-navbar d-lg-none">
-    <a href="{% url 'core:home' %}" class="mobile-nav-item">
-        <i class="fas fa-home mobile-nav-icon"></i>
-        <span class="mobile-nav-text">Ana Sayfa</span>
-    </a>
-    <a href="{% url 'core:services' %}" class="mobile-nav-item">
-        <i class="fas fa-balance-scale mobile-nav-icon"></i>
-        <span class="mobile-nav-text">Hizmetler</span>
-    </a>
-    <a href="{% url 'core:team' %}" class="mobile-nav-item">
-        <i class="fa-sharp fa-solid fa-people-group"></i>
-        <span class="mobile-nav-text">Ekibimiz</span>
-    </a>
-    <a href="{% url 'core:blog' %}" class="mobile-nav-item">
-        <i class="fas fa-pen-nib mobile-nav-icon"></i>
-        <span class="mobile-nav-text">Blog</span>
-    </a>
-    <a href="https://wa.me/905065108774" class="mobile-nav-item">
-        <i class="fab fa-whatsapp mobile-nav-icon"></i>
-        <span class="mobile-nav-text">WhatsApp</span>
-    </a>
-</div>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <!-- Custom CSS -->
+    <link href="{% static 'css/navbar.css' %}" rel="stylesheet" />
 
-<!-- Navbar JS -->
-<script>
-    // Navbar Scroll Effect
-    window.addEventListener('scroll', function () {
-        const navbar = document.querySelector('.navbar');
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
+
+</head>
+
+<body>
+    <!-- Google Translate Script -->
+    <script>
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'no',
+                includedLanguages: 'ar,es,ti,tr,uk,en,de,fr,ru,zh-CN,fa,so',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
         }
-    });
 
-    // Sayfa yüklendiğinde kontrol et
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.scrollY > 50) {
-            document.querySelector('.navbar').classList.add('scrolled');
-        }
-    });
-</script>
-<script>
-    // Aktif sayfayı belirleme
-    document.addEventListener('DOMContentLoaded', function () {
-        const currentUrl = window.location.pathname;
-        const navItems = document.querySelectorAll('.mobile-nav-item');
+        document.addEventListener('DOMContentLoaded', function () {
+            var script = document.createElement('script');
+            script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+            script.async = true;
+            document.body.appendChild(script);
 
-        navItems.forEach(item => {
-            if (item.getAttribute('href') === currentUrl) {
-                item.classList.add('active');
+            // Mobile language dropdown toggle
+            const languageBtn = document.querySelector('.mobile-language-btn');
+            const languageMenu = document.querySelector('.mobile-language-menu');
+            
+            if (languageBtn && languageMenu) {
+                languageBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    languageMenu.classList.toggle('show');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.mobile-language-dropdown')) {
+                        languageMenu.classList.remove('show');
+                    }
+                });
             }
         });
 
-        // WhatsApp numarasını dinamik olarak güncelleme (isteğe bağlı)
-        const whatsappLink = document.querySelector('a[href^="https://wa.me/"]');
-        if (whatsappLink) {
-            // Burada gerçek telefon numaranızı kullanın
-            whatsappLink.setAttribute('href', 'https://wa.me/905065108774');
+        function translateTo(lang) {
+            document.cookie = "googtrans=/no/" + lang + "; path=/";
+            location.reload();
         }
+    </script>
 
-        // Telefon numarasını dinamik olarak güncelleme (isteğe bağlı)
-        const phoneLink = document.querySelector('a[href^="tel:"]');
-        if (phoneLink) {
-            // Burada gerçek telefon numaranızı kullanın
-            phoneLink.setAttribute('href', 'tel:+905065108774');
-        }
-    });
-</script>
+    <!-- Desktop Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand me-4" href="{% url 'core:index' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Mottak Logo" height="80" />
+            </a>
+
+            <div class="d-none d-lg-flex flex-grow-1">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'core:index' %}">{% trans "Hjem" %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'core:calendar' %}">{% trans "Kalender" %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'core:blog' %}">{% trans "Annonser" %}</a>
+                    </li>
+                </ul>
+
+                <!-- Google Translate for Desktop -->
+                <div id="google_translate_element"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Bottom Navbar -->
+    <div class="d-lg-none mobile-navbar fixed-bottom">
+        <div class="container h-100">
+            <div class="d-flex h-100 align-items-center mobile-nav-container">
+                <div class="mobile-nav-items">
+                    <a href="{% url 'core:index' %}" class="mobile-nav-item">
+                        <i class="bi bi-house-door mobile-nav-icon"></i>
+                        <span class="mobile-nav-text">{% trans "Hjem" %}</span>
+                    </a>
+                    <a href="{% url 'core:calendar' %}" class="mobile-nav-item">
+                        <i class="bi bi-calendar3 mobile-nav-icon"></i>
+                        <span class="mobile-nav-text">{% trans "Kalender" %}</span>
+                    </a>
+                    <a href="{% url 'core:blog' %}" class="mobile-nav-item">
+                        <i class="bi bi-megaphone mobile-nav-icon"></i>
+                        <span class="mobile-nav-text">{% trans "Annonser" %}</span>
+                    </a>
+                </div>
+                
+                <!-- Mobile Language Dropdown -->
+                <div class="mobile-language-container">
+                    <div class="mobile-language-dropdown">
+                        <button class="mobile-language-btn">
+                            <i class="bi bi-translate"></i>
+                        </button>
+                        <div class="mobile-language-menu">
+                            <a href="#" class="mobile-language-item" onclick="translateTo('tr')">Türkçe </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('en')">English </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('ar')">العربية </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('es')">Español </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('uk')">Українська </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('ti')">ትግርኛ </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('de')">Deutsch </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('fr')">Français </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('ru')">Русский </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('zh-CN')">中文 </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('fa')">فارسی </a>
+                            <a href="#" class="mobile-language-item" onclick="translateTo('so')">Soomaali </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
