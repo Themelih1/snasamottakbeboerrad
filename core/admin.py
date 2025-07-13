@@ -8,8 +8,13 @@ from import_export.admin import ExportActionMixin
 from import_export import resources
 from .models import Activity, BlogPost, ParticipationRequest, SiteSettings
 import openpyxl
-from openpyxl.writer.excel import save_virtual_workbook
 from django.db.models import Count, Q
+from io import BytesIO
+
+def save_virtual_workbook(workbook):
+    virtual_workbook = BytesIO()
+    workbook.save(virtual_workbook)
+    return virtual_workbook.getvalue()
 
 class ParticipationRequestResource(resources.ModelResource):
     class Meta:
