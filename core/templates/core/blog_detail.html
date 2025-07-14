@@ -1,15 +1,16 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load compress %} 
 
 
 {% block title %}{{ post.title }} - {{ site_owner.name }}{% endblock %}
 
 {% block extra_css %}
-
+{% compress css %}
 <link rel="stylesheet" href="{% static 'css/blog_detail.css' %}">
+{% endcompress %}
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 {% endblock %}
 
 {% block content %}

@@ -75,7 +75,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mywebsite.wsgi.application'
 
-SSTATIC_URL = '/static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -86,7 +86,7 @@ STATICFILES_FINDERS = [
 
 if not DEBUG:
     COMPRESS_ENABLED = True
-    COMPRESS_OFFLINE = False
+    COMPRESS_OFFLINE = True
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 else:
     COMPRESS_ENABLED = False

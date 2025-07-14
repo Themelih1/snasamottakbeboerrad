@@ -1,10 +1,14 @@
 {% extends "core/base.html" %}
 {% load static %}
 {% load i18n %}
+{% load compress %}
 {% block extra_css %}
+  
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+{% compress css %}
 <link href="{% static 'css/index.css' %}" rel="stylesheet">
+{% endcompress %}  
 {% endblock %}
 
 {% block content %}

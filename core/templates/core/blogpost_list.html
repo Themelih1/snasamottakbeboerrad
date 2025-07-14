@@ -1,14 +1,17 @@
 {% extends "core/base.html" %}
 {% load static %}
 {% load i18n %}
+{% load compress %} 
 {% block title %}{% trans "Kunngjøringer" %}{% endblock %}
 
+
 {% block extra_css %}
+{% compress css %}
 <link href="{% static 'css/blogpostlist.css' %}" rel="stylesheet">
+{% endcompress %}
 {% endblock %}
 
-{% block extra_js %}
-
+{% block extra_js %} 
 {% endblock %}
 
 {% block content %}
