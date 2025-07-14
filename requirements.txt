@@ -44,7 +44,7 @@ typing_extensions==4.13.2
 tzdata==2025.1
 urllib3==2.3.0
 whitenoise==6.9.0
-django-compressor==4.1
+django-compressor
 openpyxl==3.1.2
 django-import-export==4.3.8
 google-auth>=2.0.0
