@@ -86,7 +86,7 @@ STATICFILES_FINDERS = [
 
 if not DEBUG:
     COMPRESS_ENABLED = True
-    COMPRESS_OFFLINE = True
+    COMPRESS_OFFLINE = False
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 else:
     COMPRESS_ENABLED = False
