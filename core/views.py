@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView
 from django.urls import reverse_lazy, reverse
@@ -207,56 +208,61 @@ def calendar_view(request):
     SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
     
     try:
-        # Service account credentials
-        creds = service_account.Credentials.from_service_account_file(
-            os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"),
+        # Render ortam değişkenlerinden JSON al
+        creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+        if not creds_json:
+            raise ValueError("Google kimlik bilgileri ortam değişkenlerinde tanımlı değil")
+
+        # JSON string'ini direkt kullanarak kimlik bilgisi oluştur
+        creds = service_account.Credentials.from_service_account_info(
+            json.loads(creds_json),
             scopes=SCOPES
         )
         
         service = build('calendar', 'v3', credentials=creds)
 
-        # Zaman aralığı belirle (önümüzdeki 3 ay)
+        # Zaman aralığı (önümüzdeki 3 ay)
         now = datetime.datetime.utcnow().isoformat() + 'Z'
         future = (datetime.datetime.utcnow() + datetime.timedelta(days=90)).isoformat() + 'Z'
 
+        # Takvim ID'sini ortam değişkeninden al
+        calendar_id = os.environ.get('GOOGLE_CALENDAR_ID', 'primary')
+
         events_result = service.events().list(
-            calendarId=getattr(settings, 'GOOGLE_CALENDAR_ID', 'primary'),
+            calendarId=calendar_id,
             timeMax=future,
             maxResults=50,
-            singleEvents=True,  
+            singleEvents=True,
             orderBy='startTime'
         ).execute()
 
         events = []
         for event in events_result.get('items', []):
-            # Etkinlik başlangıç ve bitiş zamanlarını işle
             start = event['start'].get('dateTime') or event['start'].get('date')
             end = event['end'].get('dateTime') or event['end'].get('date')
             
             events.append({
                 'id': event.get('id'),
-                'summary': event.get('summary', 'No Title'),
+                'summary': event.get('summary', 'Başlık Yok'),
                 'start': start,
                 'end': end,
                 'description': event.get('description', ''),
                 'location': event.get('location', ''),
-                'color': event.get('colorId', '')  # Renk ID'si (isteğe bağlı)
+                'color': event.get('colorId', '')
             })
 
         context = {
             'events': events,
-            'calendar_id': getattr(settings, 'GOOGLE_CALENDAR_ID', 'primary'),
+            'calendar_id': calendar_id,
         }
 
     except Exception as e:
-        # Hata durumunda boş bir takvim göster
         context = {
             'events': [],
             'error': str(e)
         }
 
     return render(request, 'core/calendar.html', context)
-
 
 def verify_participation(request, pk, token):
     participation = get_object_or_404(ParticipationRequest, pk=pk, token=token)
