@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
+import json
 
 
 load_dotenv()
@@ -176,5 +177,11 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Google Calendar API Configuration
 GOOGLE_CALENDAR_ID = os.getenv('GOOGLE_CALENDAR_ID')
-GOOGLE_CREDENTIALS_FILE = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', os.path.join(BASE_DIR, 'credentials.json'))
-# Compressor Configuration
+
+# Credential JSON içeriğini environment variable'dan çek, yükle
+GOOGLE_CREDENTIALS_JSON = os.getenv('GOOGLE_CREDENTIALS_JSON')
+
+if GOOGLE_CREDENTIALS_JSON:
+    GOOGLE_CREDENTIALS = json.loads(GOOGLE_CREDENTIALS_JSON)
+else:
+    GOOGLE_CREDENTIALS = None  # Veya fallback olarak yerel dosya yolu
