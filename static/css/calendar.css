@@ -6,6 +6,77 @@
         box-shadow: 0 3px 10px rgba(0,0,0,0.08);
         min-height: 600px;
     }
+     /* Norsk stiljusteringer */
+    .fc-toolbar-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .fc-button {
+        padding: 0.4rem 0.8rem;
+        text-transform: capitalize;
+    }
+    .fc-col-header-cell-cushion {
+        text-transform: capitalize;
+    }
+    .fc-event {
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    .loading-spinner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255,255,255,0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .hide-weekends .fc-day-sat,
+    .hide-weekends .fc-day-sun {
+        display: none;
+    }
+    .weekend-toggle {
+        margin-right: 10px;
+        position: relative;
+    }
+    .weekend-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .event-detail-icon {
+        margin-right: 10px;
+        color: #6c757d;
+    }
+    .fc-daygrid-day-number {
+        font-weight: bold;
+    }
     
     /* Sabit başlık için stil */
     .fc-scrollgrid-section-header {

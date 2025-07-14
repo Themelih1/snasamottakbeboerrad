@@ -2,14 +2,12 @@
 {% load static %}
 {% load i18n %}
 
-
 {% block title %}{% trans "Kalender" %}{% endblock %}
 
 {% block extra_css %}
-
-
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 <link href="{% static 'css/calendar.css' %}" rel="stylesheet">
+
 {% endblock %}
 
 {% block content %}
@@ -33,7 +31,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="eventModalTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Lukk"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-flex align-items-start mb-3">
@@ -77,6 +75,26 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Norsk språk og tidssone
+    const locale = 'nb';
+    const timeZone = 'Europe/Oslo';
+    
+    // Norske tekster
+    const texts = {
+        today: "I dag",
+        week: "Uke",
+        day: "Dag",
+        list: "Liste",
+        showWeekends: "Vis helg",
+        hideWeekends: "Skjul helg",
+        showAllHours: "Vis alle timer",
+        hideAllHours: "Vis normale timer",
+        time: "Tid",
+        location: "Sted",
+        description: "Beskrivelse",
+        close: "Lukk"
+    };
+
     // Initialize calendar
     const calendarEl = document.getElementById('calendar');
     const events = [
@@ -94,22 +112,29 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endfor %}
     ];
     
-    // Check if there are any weekend events
+    // Sjekk om det er arrangementer i helgen
     const hasWeekendEvents = events.some(event => {
         if (!event.start) return false;
         const date = new Date(event.start);
-        return date.getDay() === 0 || date.getDay() === 6; // 0 = Sunday, 6 = Saturday
+        return date.getDay() === 0 || date.getDay() === 6; // 0 = søndag, 6 = lørdag
     });
     
     const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'nb',
+        locale: locale,
+        timeZone: timeZone,
         initialView: 'timeGridWeek',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'timeGridWeek,timeGridDay,listWeek'
         },
-        firstDay: 1, // Monday as first day
+        buttonText: {
+            today: texts.today,
+            week: texts.week,
+            day: texts.day,
+            listWeek: texts.list
+        },
+        firstDay: 1, // Mandag som første ukedag
         slotMinTime: '08:00:00',
         slotMaxTime: '18:00:00',
         allDaySlot: false,
@@ -118,7 +143,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dayMaxEvents: true,
         eventDisplay: 'block',
         height: 'auto',
-        stickyHeaderDates: true, // Başlıkların sabit kalmasını sağlar
         events: events,
         eventClick: function(info) {
             showEventModal(info.event);
@@ -126,44 +150,72 @@ document.addEventListener('DOMContentLoaded', function() {
         loading: function(isLoading) {
             document.getElementById('loadingSpinner').style.display = isLoading ? 'flex' : 'none';
         },
-        // Custom day header content to show day names
         dayHeaderContent: function(arg) {
             const dayNumber = arg.date.getDate();
-            const dayName = arg.date.toLocaleDateString('nb-NO', { weekday: 'short' });
-            return { html: `<div class="fc-day-name">${dayName}</div><div class="fc-day-number">${dayNumber}</div>` };
+            const dayName = arg.date.toLocaleDateString(locale, { weekday: 'short' });
+            return { 
+                html: `<div class="fc-day-name">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</div>
+                      <div class="fc-day-number">${dayNumber}</div>` 
+            };
         }
     });
     
-    // Initially hide weekends
+    // Skjul helger som standard
     calendarEl.classList.add('hide-weekends');
     calendar.render();
     
-    // Add weekend toggle button to header
+    // Legg til helg-knapp og time-knapp
     const headerToolbar = calendarEl.closest('.card-body').querySelector('.fc-header-toolbar');
     if (headerToolbar) {
         const rightToolbar = headerToolbar.querySelector('.fc-toolbar-chunk:last-child');
         if (rightToolbar) {
-            const toggleButton = document.createElement('button');
-            toggleButton.className = 'fc-button weekend-toggle';
-            toggleButton.innerHTML = `
+            // Knapp for helg
+            const weekendButton = document.createElement('button');
+            weekendButton.className = 'fc-button fc-button-primary weekend-toggle';
+            weekendButton.innerHTML = `
                 <i class="fas fa-calendar-week"></i>
                 ${hasWeekendEvents ? '<span class="weekend-badge">!</span>' : ''}
             `;
-            toggleButton.title = '{% trans "Hafta sonunu göster/gizle" %}';
-            toggleButton.addEventListener('click', function() {
-                calendarEl.classList.toggle('hide-weekends');
+            weekendButton.title = texts.showWeekends;
+            weekendButton.addEventListener('click', function() {
+                const showWeekends = calendarEl.classList.toggle('hide-weekends');
                 calendar.updateSize();
-                // Update button icon
                 const icon = this.querySelector('i');
-                if (calendarEl.classList.contains('hide-weekends')) {
+                if (showWeekends) {
                     icon.classList.remove('fa-calendar-alt');
                     icon.classList.add('fa-calendar-week');
+                    this.title = texts.showWeekends;
                 } else {
                     icon.classList.remove('fa-calendar-week');
                     icon.classList.add('fa-calendar-alt');
+                    this.title = texts.hideWeekends;
                 }
             });
-            rightToolbar.prepend(toggleButton);
+            
+            // Knapp for timer
+            const hoursButton = document.createElement('button');
+            hoursButton.className = 'fc-button fc-button-primary hours-toggle';
+            hoursButton.innerHTML = `<i class="fas fa-clock"></i>`;
+            hoursButton.title = texts.showAllHours;
+            hoursButton.addEventListener('click', function() {
+                const showAllHours = calendarEl.classList.toggle('show-all-hours');
+                if (showAllHours) {
+                    calendar.setOption('slotMinTime', '00:00:00');
+                    calendar.setOption('slotMaxTime', '24:00:00');
+                    this.title = texts.hideAllHours;
+                } else {
+                    calendar.setOption('slotMinTime', '08:00:00');
+                    calendar.setOption('slotMaxTime', '18:00:00');
+                    this.title = texts.showAllHours;
+                }
+                calendar.updateSize();
+            });
+            
+            // Legg til knapper
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'btn-group';
+            buttonGroup.append(weekendButton, hoursButton);
+            rightToolbar.prepend(buttonGroup);
         }
     }
     
@@ -174,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('eventModalTitle').textContent = event.title;
         document.getElementById('eventTime').innerHTML = formatEventTime(event.start, event.end);
         
-        // Location
+        // Sted
         const locationContainer = document.getElementById('eventLocationContainer');
         const location = event.extendedProps?.location;
         if (location) {
@@ -184,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
             locationContainer.style.display = 'none';
         }
         
-        // Description
+        // Beskrivelse
         const descContainer = document.getElementById('eventDescriptionContainer');
         const description = event.extendedProps?.description;
         if (description) {
@@ -204,26 +256,32 @@ document.addEventListener('DOMContentLoaded', function() {
             weekday: 'long', 
             day: 'numeric', 
             month: 'long', 
+            year: 'numeric',
             hour: '2-digit', 
-            minute: '2-digit' 
+            minute: '2-digit',
+            timeZone: timeZone
         };
         
-        let timeText = start.toLocaleDateString('nb-NO', options);
+        let timeText = start.toLocaleDateString(locale, options);
         
         if (end) {
             if (start.toDateString() === end.toDateString()) {
-                // Same day
-                timeText += ' - ' + end.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+                // Samme dag
+                timeText += ' - ' + end.toLocaleTimeString(locale, { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZone: timeZone
+                });
             } else {
-                // Different days
-                timeText += ' - ' + end.toLocaleDateString('nb-NO', options);
+                // Forskjellige dager
+                timeText += ' - ' + end.toLocaleDateString(locale, options);
             }
         }
         
         return timeText;
     }
     
-    // Handle window resize
+    // Håndter vindusstørrelseendringer
     window.addEventListener('resize', function() {
         calendar.updateSize();
     });
