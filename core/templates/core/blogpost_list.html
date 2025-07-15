@@ -159,7 +159,7 @@
                             <h3 class="announcement-item-title">
                                 <a href="{% url 'core:blog_detail' post.pk %}">{{ post.title }}</a>
                             </h3>
-                            <p class="announcement-item-excerpt">{{ post.content|striptags|truncatewords:15 }}</p>
+                            <p class="announcement-item-excerpt">{{ post.content|striptags|truncatewords:15|safe }}</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">
                                     <i class="bi bi-clock"></i> {{ post.created_at|date:"d.m.Y" }}
