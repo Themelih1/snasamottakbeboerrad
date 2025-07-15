@@ -7,7 +7,6 @@
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 <link href="{% static 'css/calendar.css' %}" rel="stylesheet">
-
 {% endblock %}
 
 {% block content %}
@@ -23,6 +22,15 @@
             </div>
             <div id="calendar"></div>
         </div>
+    </div>
+
+    <!-- Google Calendar Button -->
+    <div class="text-center mb-4">
+        <a href="https://calendar.google.com/calendar/render?cid={{ request.build_absolute_uri }}" 
+           target="_blank" 
+           class="btn btn-primary">
+            <i class="fab fa-google"></i> {% trans "Legg til i Google Kalender" %}
+        </a>
     </div>
 
     <!-- Event Details Modal -->
@@ -78,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Norsk språk og tidssone
     const locale = 'nb';
     const timeZone = 'Europe/Oslo';
+    const now = new Date();
     
     // Norske tekster
     const texts = {
@@ -92,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function() {
         time: "Tid",
         location: "Sted",
         description: "Beskrivelse",
-        close: "Lukk"
+        close: "Lukk",
+        addToGoogle: "Legg til i Google Kalender"
     };
 
     // Initialize calendar
@@ -112,11 +122,23 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endfor %}
     ];
     
-    // Sjekk om det er arrangementer i helgen
-    const hasWeekendEvents = events.some(event => {
+    // Sjekk om det er fremtidige arrangementer i helgen
+    const hasFutureWeekendEvents = events.some(event => {
         if (!event.start) return false;
-        const date = new Date(event.start);
-        return date.getDay() === 0 || date.getDay() === 6; // 0 = søndag, 6 = lørdag
+        const eventDate = new Date(event.start);
+        const isWeekend = eventDate.getDay() === 0 || eventDate.getDay() === 6;
+        const isFuture = eventDate > now;
+        return isWeekend && isFuture;
+    });
+    
+    // Sjekk om det er fremtidige arrangementer utenfor normal arbeidstid
+    const hasFutureAfterHoursEvents = events.some(event => {
+        if (!event.start) return false;
+        const eventDate = new Date(event.start);
+        const hours = eventDate.getHours();
+        const isAfterHours = hours < 8 || hours >= 18;
+        const isFuture = eventDate > now;
+        return isAfterHours && isFuture;
     });
     
     const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -160,6 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    
     // Skjul helger som standard
     calendarEl.classList.add('hide-weekends');
     calendar.render();
@@ -174,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
             weekendButton.className = 'fc-button fc-button-primary weekend-toggle';
             weekendButton.innerHTML = `
                 <i class="fas fa-calendar-week"></i>
-                ${hasWeekendEvents ? '<span class="weekend-badge">!</span>' : ''}
+                ${hasFutureWeekendEvents ? '<span class="weekend-badge">!</span>' : ''}
             `;
             weekendButton.title = texts.showWeekends;
             weekendButton.addEventListener('click', function() {
@@ -195,7 +218,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Knapp for timer
             const hoursButton = document.createElement('button');
             hoursButton.className = 'fc-button fc-button-primary hours-toggle';
-            hoursButton.innerHTML = `<i class="fas fa-clock"></i>`;
+            hoursButton.innerHTML = `
+                <i class="fas fa-clock"></i>
+                ${hasFutureAfterHoursEvents ? '<span class="hours-badge">!</span>' : ''}
+            `;
             hoursButton.title = texts.showAllHours;
             hoursButton.addEventListener('click', function() {
                 const showAllHours = calendarEl.classList.toggle('show-all-hours');
@@ -287,4 +313,38 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<style>
+    /* Stiler for varselbadges */
+    .weekend-badge, .hours-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 15px;
+        height: 15px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .weekend-toggle, .hours-toggle {
+        position: relative;
+    }
+    
+    /* Google Calendar-knapp stil */
+    .btn-primary {
+        background-color: #4285F4;
+        border-color: #4285F4;
+    }
+    
+    .btn-primary:hover {
+        background-color: #3367D6;
+        border-color: #3367D6;
+    }
+</style>
 {% endblock %}
