@@ -17,59 +17,6 @@
     <!-- Custom CSS -->
     {% compress css %}
     <link href="{% static 'css/navbar.css' %}" rel="stylesheet" />
-    <style>
-        /* Navbar üst mavi çizgi kaldırma */
-        body {
-            padding-top: 0 !important;
-        }
-        .navbar {
-            border-top: none !important;
-        }
-
-        /* Modern Install Button Styles */
-        .install-btn {
-            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
-            border: none;
-            border-radius: 30px;
-            padding: 8px 16px;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-        .install-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(58, 123, 213, 0.4);
-        }
-        .install-btn:active {
-            transform: translateY(0);
-        }
-        .install-btn i {
-            font-size: 1.1rem;
-        }
-        .install-btn-mobile {
-            padding: 8px 12px;
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 1000;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        @media (max-width: 991.98px) {
-            .navbar-brand img {
-                height: 60px !important;
-            }
-        }
-    </style>
     {% endcompress %}
 </head>
 
@@ -123,6 +70,13 @@
                 <img src="{% static 'images/logo.png' %}" alt="Mottak Logo" height="80" />
             </a>
 
+            <!-- Mobile Install Button - Moved to top right -->
+            <div class="d-lg-none ms-auto">
+                <button id="installBtnMobile" class="btn btn-primary btn-sm d-none">
+                    <i class="bi bi-download"></i>
+                </button>
+            </div>
+
             <div class="d-none d-lg-flex flex-grow-1 align-items-center">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -139,20 +93,13 @@
                 <!-- Google Translate for Desktop -->
                 <div id="google_translate_element" class="me-3"></div>
 
-                <!-- Modern Desktop Install Button -->
-                <button id="installBtn" class="install-btn d-none">
-                    <i class="bi bi-download"></i>
-                    <span>Installer app</span>
+                <!-- PWA Install Button -->
+                <button id="installBtn" class="btn btn-primary d-none">
+                    <i class="bi bi-download me-1"></i> Installer app
                 </button>
             </div>
         </div>
     </nav>
-
-    <!-- Mobile Install Button - Fixed Position -->
-    <button id="installBtnMobile" class="install-btn install-btn-mobile d-none">
-        <i class="bi bi-download"></i>
-        <span class="d-none d-sm-inline">Installer</span>
-    </button>
 
     <!-- Mobile Bottom Navbar -->
     <div class="d-lg-none mobile-navbar fixed-bottom">
@@ -208,80 +155,43 @@
         const installBtn = document.getElementById('installBtn');
         const installBtnMobile = document.getElementById('installBtnMobile');
 
-        // PWA yüklü mü kontrolü
-        function checkIfPWAInstalled() {
-            return window.matchMedia('(display-mode: standalone)').matches 
-                   || navigator.standalone 
-                   || (window.navigator.getInstalledRelatedApps && window.navigator.getInstalledRelatedApps().length > 0);
-        }
-
-        // Butonları yönetme
-        function managePWAButtons() {
-            if(checkIfPWAInstalled()) {
-                installBtn?.remove();
-                installBtnMobile?.remove();
-                return;
-            }
-
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                
-                // Mobil kontrolü
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                const btnToShow = isMobile ? installBtnMobile : installBtn;
-                
-                if(btnToShow) {
-                    btnToShow.classList.remove('d-none');
-                    
-                    btnToShow.addEventListener('click', async () => {
-                        if(!deferredPrompt) return;
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        console.log('User choice:', outcome);
-                        if(outcome === 'accepted') {
-                            btnToShow.classList.add('d-none');
-                        }
-                    });
-                }
-            });
-        }
-
-        // iOS özel davranış
-        function handleIOSPWA() {
-            if(/iPad|iPhone|iPod/.test(navigator.userAgent) {
-                if(!navigator.standalone) {
-                    // iOS'ta PWA yükleme rehberi göster
-                    const iosGuide = document.createElement('div');
-                    iosGuide.className = 'alert alert-info text-center';
-                    iosGuide.innerHTML = `
-                        <p>For iOS: <br>1. Tap Share button <br>2. Select 'Add to Home Screen'</p>
-                    `;
-                    document.body.prepend(iosGuide);
-                }
-            }
-        }
-
-        // Sayfa yüklendiğinde çalıştır
-        document.addEventListener('DOMContentLoaded', () => {
-            managePWAButtons();
-            handleIOSPWA();
-            
-            // Debug için
-            console.log('PWA Status:', {
-                installed: checkIfPWAInstalled(),
-                displayMode: window.matchMedia('(display-mode: standalone)').matches,
-                isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
-                isStandaloneIOS: navigator.standalone
-            });
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show buttons
+            if (installBtn) installBtn.classList.remove('d-none');
+            if (installBtnMobile) installBtnMobile.classList.remove('d-none');
         });
 
-        // PWA yüklendikten sonra
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA successfully installed!');
-            installBtn?.remove();
-            installBtnMobile?.remove();
+        function hideInstallButtons() {
+            if (installBtn) installBtn.classList.add('d-none');
+            if (installBtnMobile) installBtnMobile.classList.add('d-none');
+        }
+
+        installBtn?.addEventListener('click', async () => {
+            deferredPrompt.prompt();
+            const choiceResult = await deferredPrompt.userChoice;
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted install');
+            } else {
+                console.log('User declined install');
+            }
+            deferredPrompt = null;
+            hideInstallButtons();
+        });
+
+        installBtnMobile?.addEventListener('click', async () => {
+            deferredPrompt.prompt();
+            const choiceResult = await deferredPrompt.userChoice;
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted install');
+            } else {
+                console.log('User declined install');
+            }
+            deferredPrompt = null;
+            hideInstallButtons();
         });
     </script>
 </body>
+
 </html>
