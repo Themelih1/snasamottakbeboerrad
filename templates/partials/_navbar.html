@@ -31,6 +31,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
         .install-btn:hover {
             transform: translateY(-2px);
@@ -44,6 +45,15 @@
         }
         .install-btn-mobile {
             padding: 8px 12px;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+        }
+        @media (max-width: 991.98px) {
+            .navbar-brand img {
+                height: 60px !important;
+            }
         }
     </style>
     {% endcompress %}
@@ -99,14 +109,6 @@
                 <img src="{% static 'images/logo.png' %}" alt="Mottak Logo" height="80" />
             </a>
 
-            <!-- Modern Mobile Install Button - Top Right -->
-            <div class="d-lg-none ms-auto">
-                <button id="installBtnMobile" class="install-btn install-btn-mobile d-none">
-                    <i class="bi bi-download"></i>
-                    <span>Installer app</span>
-                </button>
-            </div>
-
             <div class="d-none d-lg-flex flex-grow-1 align-items-center">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -131,6 +133,12 @@
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Install Button - Fixed Position -->
+    <button id="installBtnMobile" class="install-btn install-btn-mobile d-none d-lg-none">
+        <i class="bi bi-download"></i>
+        <span>Installer</span>
+    </button>
 
     <!-- Mobile Bottom Navbar -->
     <div class="d-lg-none mobile-navbar fixed-bottom">
@@ -192,6 +200,11 @@
             // Show buttons
             if (installBtn) installBtn.classList.remove('d-none');
             if (installBtnMobile) installBtnMobile.classList.remove('d-none');
+            
+            // Debugging
+            console.log('Install prompt triggered');
+            console.log('Desktop button visible:', installBtn && !installBtn.classList.contains('d-none'));
+            console.log('Mobile button visible:', installBtnMobile && !installBtnMobile.classList.contains('d-none'));
         });
 
         function hideInstallButtons() {
@@ -200,29 +213,27 @@
         }
 
         installBtn?.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
             deferredPrompt.prompt();
             const choiceResult = await deferredPrompt.userChoice;
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted install');
-            } else {
-                console.log('User declined install');
-            }
+            console.log('User choice:', choiceResult.outcome);
             deferredPrompt = null;
             hideInstallButtons();
         });
 
         installBtnMobile?.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
             deferredPrompt.prompt();
             const choiceResult = await deferredPrompt.userChoice;
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted install');
-            } else {
-                console.log('User declined install');
-            }
+            console.log('User choice:', choiceResult.outcome);
             deferredPrompt = null;
             hideInstallButtons();
         });
+
+        // Debug PWA install capability
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+        });
     </script>
 </body>
-
 </html>
