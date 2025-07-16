@@ -82,15 +82,16 @@
                 </ul>
 
                 <div id="google_translate_element" class="me-3"></div>
+
+                <button id="installBtn" class="btn btn-primary d-none">
+                    <i class="bi bi-download me-1"></i> Installer app
+                </button>
             </div>
 
             <!-- Mobil üst kısım: sadece küçük ekranlarda görünür -->
             <div class="d-lg-none ms-auto">
-                <button id="installBtnMobileTop"
-                    class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow-sm"
-                    title="Installer app" style="font-size: 0.95rem;">
-                    <i class="bi bi-download" style="font-size: 1.1rem;"></i>
-                    <span>Installer app</span>
+                <button id="installBtnMobileTop" class="btn btn-link text-white p-0" title="Installer app" style="font-size: 1.4rem;">
+                    <i class="bi bi-download"></i>
                 </button>
             </div>
         </div>
@@ -136,6 +137,11 @@
                             <a href="#" class="mobile-language-item" onclick="translateTo('so')">Soomaali </a>
                         </div>
                     </div>
+
+                    <!-- PWA Install Button Mobile (Bottom) -->
+                    <button id="installBtnMobile" class="btn btn-primary btn-sm d-none">
+                        <i class="bi bi-download me-1"></i> Installer app
+                    </button>
                 </div>
             </div>
         </div>
