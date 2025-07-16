@@ -86,8 +86,7 @@
 
             <!-- Mobil üst kısım: sadece küçük ekranlarda görünür -->
             <div class="d-lg-none ms-auto">
-                <button id="installBtnMobileTop" class="btn btn-link text-white p-0" title="Installer app"
-                    style="font-size: 1.4rem;">
+                <button id="installBtnMobileTop" class="btn btn-link text-white p-0" title="Installer app" style="font-size: 1.4rem;">
                     <i class="bi bi-download"></i>
                 </button>
             </div>
@@ -201,24 +200,7 @@
             deferredPrompt = null;
             hideInstallButtons();
         });
-
-        // iOS cihazlar için manuel kurulum uyarısı (yalnızca Safari'de çalışır)
-        function isIos() {
-            const userAgent = window.navigator.userAgent.toLowerCase();
-            return /iphone|ipad|ipod/.test(userAgent);
-        }
-
-        function isInStandaloneMode() {
-            return ('standalone' in window.navigator) && window.navigator.standalone;
-        }
-
-        if (isIos() && !isInStandaloneMode()) {
-            setTimeout(() => {
-                alert("For å installere appen på iPhone: Trykk på dele-ikonet (pil opp) og velg 'Legg til på Hjem-skjermen'.");
-            }, 5000);
-        }
     </script>
-
 </body>
 
-</html>
+</html>   
