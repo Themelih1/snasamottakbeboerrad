@@ -18,6 +18,14 @@
     {% compress css %}
     <link href="{% static 'css/navbar.css' %}" rel="stylesheet" />
     <style>
+        /* Navbar üst mavi çizgi kaldırma */
+        body {
+            padding-top: 0 !important;
+        }
+        .navbar {
+            border-top: none !important;
+        }
+
         /* Modern Install Button Styles */
         .install-btn {
             background: linear-gradient(135deg, #3a7bd5, #00d2ff);
@@ -49,6 +57,12 @@
             top: 15px;
             right: 15px;
             z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         @media (max-width: 991.98px) {
             .navbar-brand img {
@@ -135,9 +149,9 @@
     </nav>
 
     <!-- Mobile Install Button - Fixed Position -->
-    <button id="installBtnMobile" class="install-btn install-btn-mobile d-none d-lg-none">
+    <button id="installBtnMobile" class="install-btn install-btn-mobile d-none">
         <i class="bi bi-download"></i>
-        <span>Installer</span>
+        <span class="d-none d-sm-inline">Installer</span>
     </button>
 
     <!-- Mobile Bottom Navbar -->
@@ -194,45 +208,79 @@
         const installBtn = document.getElementById('installBtn');
         const installBtnMobile = document.getElementById('installBtnMobile');
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Show buttons
-            if (installBtn) installBtn.classList.remove('d-none');
-            if (installBtnMobile) installBtnMobile.classList.remove('d-none');
-            
-            // Debugging
-            console.log('Install prompt triggered');
-            console.log('Desktop button visible:', installBtn && !installBtn.classList.contains('d-none'));
-            console.log('Mobile button visible:', installBtnMobile && !installBtnMobile.classList.contains('d-none'));
-        });
-
-        function hideInstallButtons() {
-            if (installBtn) installBtn.classList.add('d-none');
-            if (installBtnMobile) installBtnMobile.classList.add('d-none');
+        // PWA yüklü mü kontrolü
+        function checkIfPWAInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches 
+                   || navigator.standalone 
+                   || (window.navigator.getInstalledRelatedApps && window.navigator.getInstalledRelatedApps().length > 0);
         }
 
-        installBtn?.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const choiceResult = await deferredPrompt.userChoice;
-            console.log('User choice:', choiceResult.outcome);
-            deferredPrompt = null;
-            hideInstallButtons();
+        // Butonları yönetme
+        function managePWAButtons() {
+            if(checkIfPWAInstalled()) {
+                installBtn?.remove();
+                installBtnMobile?.remove();
+                return;
+            }
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Mobil kontrolü
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const btnToShow = isMobile ? installBtnMobile : installBtn;
+                
+                if(btnToShow) {
+                    btnToShow.classList.remove('d-none');
+                    
+                    btnToShow.addEventListener('click', async () => {
+                        if(!deferredPrompt) return;
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log('User choice:', outcome);
+                        if(outcome === 'accepted') {
+                            btnToShow.classList.add('d-none');
+                        }
+                    });
+                }
+            });
+        }
+
+        // iOS özel davranış
+        function handleIOSPWA() {
+            if(/iPad|iPhone|iPod/.test(navigator.userAgent) {
+                if(!navigator.standalone) {
+                    // iOS'ta PWA yükleme rehberi göster
+                    const iosGuide = document.createElement('div');
+                    iosGuide.className = 'alert alert-info text-center';
+                    iosGuide.innerHTML = `
+                        <p>For iOS: <br>1. Tap Share button <br>2. Select 'Add to Home Screen'</p>
+                    `;
+                    document.body.prepend(iosGuide);
+                }
+            }
+        }
+
+        // Sayfa yüklendiğinde çalıştır
+        document.addEventListener('DOMContentLoaded', () => {
+            managePWAButtons();
+            handleIOSPWA();
+            
+            // Debug için
+            console.log('PWA Status:', {
+                installed: checkIfPWAInstalled(),
+                displayMode: window.matchMedia('(display-mode: standalone)').matches,
+                isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
+                isStandaloneIOS: navigator.standalone
+            });
         });
 
-        installBtnMobile?.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const choiceResult = await deferredPrompt.userChoice;
-            console.log('User choice:', choiceResult.outcome);
-            deferredPrompt = null;
-            hideInstallButtons();
-        });
-
-        // Debug PWA install capability
+        // PWA yüklendikten sonra
         window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
+            console.log('PWA successfully installed!');
+            installBtn?.remove();
+            installBtnMobile?.remove();
         });
     </script>
 </body>
