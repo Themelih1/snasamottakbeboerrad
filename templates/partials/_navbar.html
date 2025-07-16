@@ -38,7 +38,6 @@
             script.async = true;
             document.body.appendChild(script);
 
-            // Mobile language dropdown toggle
             const languageBtn = document.querySelector('.mobile-language-btn');
             const languageMenu = document.querySelector('.mobile-language-menu');
 
@@ -48,7 +47,6 @@
                     languageMenu.classList.toggle('show');
                 });
 
-                // Close dropdown when clicking outside
                 document.addEventListener('click', function (e) {
                     if (!e.target.closest('.mobile-language-dropdown')) {
                         languageMenu.classList.remove('show');
@@ -70,13 +68,6 @@
                 <img src="{% static 'images/logo.png' %}" alt="Mottak Logo" height="80" />
             </a>
 
-            <!-- Mobile Install Button - Moved to top right -->
-            <div class="d-lg-none ms-auto">
-                <button id="installBtnMobile" class="btn btn-primary btn-sm d-none">
-                    <i class="bi bi-download"></i>
-                </button>
-            </div>
-
             <div class="d-none d-lg-flex flex-grow-1 align-items-center">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -90,12 +81,16 @@
                     </li>
                 </ul>
 
-                <!-- Google Translate for Desktop -->
                 <div id="google_translate_element" class="me-3"></div>
+            </div>
 
-                <!-- PWA Install Button -->
-                <button id="installBtn" class="btn btn-primary d-none">
-                    <i class="bi bi-download me-1"></i> Installer app
+            <!-- Mobil üst kısım: sadece küçük ekranlarda görünür -->
+            <div class="d-lg-none ms-auto">
+                <button id="installBtnMobileTop"
+                    class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow-sm"
+                    title="Installer app" style="font-size: 0.95rem;">
+                    <i class="bi bi-download" style="font-size: 1.1rem;"></i>
+                    <span>Installer app</span>
                 </button>
             </div>
         </div>
@@ -154,27 +149,30 @@
         let deferredPrompt;
         const installBtn = document.getElementById('installBtn');
         const installBtnMobile = document.getElementById('installBtnMobile');
+        const installBtnMobileTop = document.getElementById('installBtnMobileTop');
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Show buttons
+
             if (installBtn) installBtn.classList.remove('d-none');
             if (installBtnMobile) installBtnMobile.classList.remove('d-none');
+            if (installBtnMobileTop) installBtnMobileTop.classList.remove('d-none');
         });
 
         function hideInstallButtons() {
             if (installBtn) installBtn.classList.add('d-none');
             if (installBtnMobile) installBtnMobile.classList.add('d-none');
+            if (installBtnMobileTop) installBtnMobileTop.classList.add('d-none');
         }
 
         installBtn?.addEventListener('click', async () => {
             deferredPrompt.prompt();
             const choiceResult = await deferredPrompt.userChoice;
             if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted install');
+                console.log('Kullanıcı uygulamayı yükledi');
             } else {
-                console.log('User declined install');
+                console.log('Kullanıcı yüklemeyi reddetti');
             }
             deferredPrompt = null;
             hideInstallButtons();
@@ -184,9 +182,21 @@
             deferredPrompt.prompt();
             const choiceResult = await deferredPrompt.userChoice;
             if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted install');
+                console.log('Kullanıcı uygulamayı yükledi');
             } else {
-                console.log('User declined install');
+                console.log('Kullanıcı yüklemeyi reddetti');
+            }
+            deferredPrompt = null;
+            hideInstallButtons();
+        });
+
+        installBtnMobileTop?.addEventListener('click', async () => {
+            deferredPrompt.prompt();
+            const choiceResult = await deferredPrompt.userChoice;
+            if (choiceResult.outcome === 'accepted') {
+                console.log('Kullanıcı uygulamayı yükledi');
+            } else {
+                console.log('Kullanıcı yüklemeyi reddetti');
             }
             deferredPrompt = null;
             hideInstallButtons();
